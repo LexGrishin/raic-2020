@@ -12,7 +12,6 @@ public:
     void debugUpdate(const PlayerView& playerView, DebugInterface& debugInterface);
 
     bool isGlobalsSet = false;
-    int myId = -1;
 
     std::vector <std::shared_ptr<DebugData>> debugData;
 
