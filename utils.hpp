@@ -19,6 +19,12 @@ namespace debug
 
 const int EMPTY_OR_UNKNOWN = -1;
 
-int distance(Entity e1, Entity e2, std::unordered_map<EntityType, EntityProperties> properties);
+struct PlayerPopulation
+{
+    int inUse;
+    int available;
+};
+
+int distance(Entity& e1, Entity& e2, std::unordered_map<EntityType, EntityProperties>& properties);
 
 #endif

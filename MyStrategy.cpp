@@ -21,8 +21,19 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, 
                                                                          Vec2Float(0, -20), colors::white), 
                                                                          "My ID: "+to_string(playerView.myId), 
-                                                                         0, 20));
-
+                                                                      0, 20));
+    setGlobals(playerView);
+    std::unordered_map<int, Player> playersInfo;
+    std::unordered_map<int, PlayerPopulation> playerPopulation;
+    for (Player player : playerView.players)
+    {
+        PlayerPopulation population{0, 0};
+        playersInfo[player.id] = player;
+        playerPopulation[player.id] = population;
+    }
+        
+    
+    this->myAvailableResources = playersInfo[playerView.myId].resource;
     std::unordered_map<int, EntityAction> orders{};
     int map [playerView.mapSize][playerView.mapSize];
     for (int i = 0; i < playerView.mapSize; i++)
@@ -33,16 +44,22 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
                    enemyBuilderUnits, enemyAtackUnits, enemyBuildings, enemyHouses,
                    myBuiderUnits, myAtackUnits, myBuildings, myHouses;
 
-    
+    // Fill map and unit arrays.
     for (Entity entity : playerView.entities)
     {
+        int entitySize = playerView.entityProperties.at(entity.entityType).size;
+        for (int i=entity.position.x; i < entity.position.x + entitySize; i++)
+            for (int j=entity.position.x; j < entity.position.x + entitySize; j++)
+                map[i][j] = entity.entityType;
+        
         if (entity.playerId == nullptr)
         {
-            map[entity.position.x][entity.position.y] = EntityType::RESOURCE;
             resourses.emplace_back(entity);
         }
         else if (*entity.playerId != playerView.myId)
         {
+            playerPopulation[*entity.playerId].available += playerView.entityProperties.at(entity.entityType).populationProvide;
+            playerPopulation[*entity.playerId].inUse += playerView.entityProperties.at(entity.entityType).populationUse;
             switch (entity.entityType)
             {
             case EntityType::BUILDER_UNIT:
@@ -78,6 +95,8 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         }
         else
         {
+            playerPopulation[*entity.playerId].available += playerView.entityProperties.at(entity.entityType).populationProvide;
+            playerPopulation[*entity.playerId].inUse += playerView.entityProperties.at(entity.entityType).populationUse;
             switch (entity.entityType)
             {
             case EntityType::BUILDER_UNIT:
@@ -111,27 +130,16 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
                 break;
             }
         }
-        
-        // if (entity.entityType != EntityType::RESOURCE)
-        // {
-        //     std::cout << *entity.playerId << " ";
-        // }
-        // std::cout << *entity.playerId << " ";
-        // if (entity.playerId == this->myId)
-        // {
-            // std::cout << "my unit" << std::endl;
-            // switch (entity.entityType)
-            // {
-            // case EntityType::BUILDER_UNIT:
-            //     std::cout << "builder unit (" << entity.position.x << ", " << entity.position.y << ")" << std::endl;
-            //     break;
-            
-            // default:
-            //     break;
-            // }
-        // }
     }
 
+    this->myAvailableResources = playersInfo[playerView.myId].resource;
+    this->myAvailablePopulation = playerPopulation[playerView.myId].available - playerPopulation[playerView.myId].inUse;
+
+    for (Entity entity : myBuiderUnits)
+    {
+        EntityAction action = chooseBuilderUnitAction(entity, playerView, resourses);
+        orders[entity.id] = action;
+    }
 
     // std::cout << "map size = " << playerView.mapSize << std::endl;
     // std::cout << "entities = " << playerView.entities.size() << std::endl;
@@ -158,4 +166,44 @@ void MyStrategy::debugUpdate(const PlayerView& playerView, DebugInterface& debug
 void MyStrategy::setGlobals(const PlayerView& playerView)
 {
     this->isGlobalsSet = true;
+    for (std::pair<EntityType, EntityProperties> element : playerView.entityProperties)
+    {
+        this->entityProperties[element.first] = element.second;
+    }
+}
+
+EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, const PlayerView& playerView, vector<Entity>& resoures)
+{
+    EntityAction resultAction;
+    Entity nearestResource = findNearestEntity(entity, resoures);
+    MoveAction action;
+    action.target = nearestResource.position;
+    action.breakThrough = true;
+    action.findClosestPosition = true;
+
+    ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
+    ColoredVertex B{std::make_shared<Vec2Float>(nearestResource.position.x, nearestResource.position.y), {0, 0}, colors::red};
+    // ColoredVertex C{std::make_shared<Vec2Float>(50, 100), {0, 0}, colors::red};
+    std::vector<ColoredVertex> line{A, B};
+    this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+    // auto debugTriangle = std::make_shared<DebugData::Primitives>(triangle, PrimitiveType::TRIANGLES);
+
+    resultAction.moveAction = std::make_shared<MoveAction>(action);
+    return resultAction;
+}
+
+Entity MyStrategy::findNearestEntity(Entity& entity, std::vector<Entity>& entities)
+{
+    int min_dist = 100000;
+    Entity nearestEntity;
+    for (Entity e : entities)
+    {
+        int d = distance(entity, e, this->entityProperties);
+        if (d < min_dist)
+        {
+            min_dist = d;
+            nearestEntity = e;
+        }
+    }
+    return nearestEntity;
 }
