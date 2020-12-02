@@ -14,12 +14,22 @@ public:
     bool isGlobalsSet = false;
     int myAvailableResources = 0;
     int myAvailablePopulation = 0;
+    int atackUnitOrder = 0;
+    int builderUnitOrder = 0;
+
+    std::vector<Entity> resourses, 
+                   enemyBuilderUnits, enemyAtackUnits, enemyBuildings, enemyHouses,
+                   myBuiderUnits, myAtackUnits, myBuildings, myHouses;
+
     std::unordered_map<EntityType, EntityProperties> entityProperties;
 
     std::vector <std::shared_ptr<DebugData>> debugData;
 
     void setGlobals(const PlayerView& playerView);
-    EntityAction chooseBuilderUnitAction(Entity& entity, const PlayerView& playerView, std::vector<Entity>& resoures);
+    int distance(Entity& e1, Entity& e2);
+    EntityAction chooseBuilderUnitAction(Entity& entity, const PlayerView& playerView);
+    EntityAction chooseRecruitUnitAction(Entity& entity, const PlayerView& playerView);
+    EntityAction chooseAtackUnitAction(Entity& entity, const PlayerView& playerView);
     Entity findNearestEntity(Entity& entity, std::vector<Entity>& entities);
 };
 

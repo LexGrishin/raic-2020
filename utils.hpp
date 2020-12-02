@@ -25,6 +25,6 @@ struct PlayerPopulation
     int available;
 };
 
-int distance(Entity& e1, Entity& e2, std::unordered_map<EntityType, EntityProperties>& properties);
+float unitBalance(float x);
 
 #endif
