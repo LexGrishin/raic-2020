@@ -16,7 +16,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     std::unordered_map<int, EntityAction> orders{};
 
     this->debugData.clear();
-    
+
     setGlobals(playerView);
     std::unordered_map<int, Player> playersInfo;
     std::unordered_map<int, PlayerPopulation> playerPopulation;
@@ -165,7 +165,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
 
     for (Entity entity : myAtackUnits)
     {
-        EntityAction action = chooseAtackUnitAction(entity, playerView);
+        EntityAction action = chooseAtackUnitAction(entity, playerView, occupiedCellsMap);
         orders[entity.id] = action;
     }
 
@@ -342,23 +342,81 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
     return resultAction;
 }
 
-EntityAction MyStrategy::chooseAtackUnitAction(Entity& entity, const PlayerView& playerView)
+EntityAction MyStrategy::chooseAtackUnitAction(Entity& entity, const PlayerView& playerView, vector<vector<int>>& map)
 {
     EntityAction resultAction;
-    AttackAction action;
-    AutoAttack autoAttack;
-    autoAttack.pathfindRange = 40;
-    autoAttack.validTargets = {EntityType::RANGED_UNIT,
-                               EntityType::MELEE_UNIT,
-                               EntityType::TURRET,
-                               EntityType::BUILDER_UNIT,
-                               EntityType::RANGED_BASE,
-                               EntityType::MELEE_BASE,
-                               EntityType::BUILDER_BASE,
-                               EntityType::HOUSE
-                              };
-    action.autoAttack = std::make_shared<AutoAttack>(autoAttack);
-    resultAction.attackAction = std::make_shared<AttackAction>(action);
+    
+    Entity nearestEnemyAttackUnit = findNearestEntity(entity, enemyAtackUnits, map);
+    Entity nearestEnemyBuilderUnit = findNearestEntity(entity, enemyBuilderUnits, map);
+    Entity nearestEnemyBuilding = findNearestEntity(entity, enemyBuildings, map);
+    if (nearestEnemyAttackUnit.id != -1)
+    {
+        if (distance(entity, nearestEnemyAttackUnit)>=(*entityProperties[entity.entityType].attack).attackRange)
+        {
+            MoveAction action;
+            action.target = nearestEnemyAttackUnit.position;
+            action.breakThrough = false;
+            action.findClosestPosition = true;
+            resultAction.moveAction = std::make_shared<MoveAction>(action);
+        }
+        else
+        {
+            AttackAction action;
+            action.target = std::make_shared<int>(nearestEnemyAttackUnit.id);
+            resultAction.attackAction = std::make_shared<AttackAction>(action);
+        }       
+    }
+    else if (nearestEnemyBuilderUnit.id != -1)
+    {
+        if (distance(entity, nearestEnemyBuilderUnit)>=(*entityProperties[entity.entityType].attack).attackRange)
+        {
+            MoveAction action;
+            action.target = nearestEnemyBuilderUnit.position;
+            action.breakThrough = false;
+            action.findClosestPosition = true;
+            resultAction.moveAction = std::make_shared<MoveAction>(action);
+        }
+        else
+        {
+            AttackAction action;
+            action.target = std::make_shared<int>(nearestEnemyBuilderUnit.id);
+            resultAction.attackAction = std::make_shared<AttackAction>(action);
+        }       
+    }
+    else if (nearestEnemyBuilding.id != -1)
+    {
+        if (distance(entity, nearestEnemyBuilding)>=(*entityProperties[entity.entityType].attack).attackRange)
+        {
+            MoveAction action;
+            action.target = nearestEnemyBuilding.position;
+            action.breakThrough = false;
+            action.findClosestPosition = true;
+            resultAction.moveAction = std::make_shared<MoveAction>(action);
+        }
+        else
+        {
+            AttackAction action;
+            action.target = std::make_shared<int>(nearestEnemyBuilding.id);
+            resultAction.attackAction = std::make_shared<AttackAction>(action);
+        }       
+    }
+    else
+    {
+        AttackAction action;
+        AutoAttack autoAttack;
+        autoAttack.pathfindRange = 40;
+        autoAttack.validTargets = {EntityType::RANGED_UNIT,
+                                EntityType::MELEE_UNIT,
+                                EntityType::TURRET,
+                                EntityType::BUILDER_UNIT,
+                                EntityType::RANGED_BASE,
+                                EntityType::MELEE_BASE,
+                                EntityType::BUILDER_BASE,
+                                EntityType::HOUSE
+                                };
+        action.autoAttack = std::make_shared<AutoAttack>(autoAttack);
+        resultAction.attackAction = std::make_shared<AttackAction>(action);
+    }
     return resultAction;
 }
 
