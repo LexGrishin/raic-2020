@@ -16,14 +16,14 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     std::unordered_map<int, EntityAction> orders{};
 
     this->debugData.clear();
-    this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, 
-                                                                         Vec2Float(0, 0), colors::white), 
-                                                                         "Map size: "+to_string(playerView.mapSize), 
-                                                                         0, 20));
-    this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, 
-                                                                         Vec2Float(0, -20), colors::white), 
-                                                                         "My ID: "+to_string(playerView.myId), 
-                                                                      0, 20));
+    // this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, 
+    //                                                                      Vec2Float(0, 0), colors::white), 
+    //                                                                      "Map size: "+to_string(playerView.mapSize), 
+    //                                                                      0, 20));
+    // this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, 
+    //                                                                      Vec2Float(0, -20), colors::white), 
+    //                                                                      "My ID: "+to_string(playerView.myId), 
+    //                                                                   0, 20));
     setGlobals(playerView);
     std::unordered_map<int, Player> playersInfo;
     std::unordered_map<int, PlayerPopulation> playerPopulation;
@@ -176,6 +176,13 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         orders[entity.id] = action;
     }
 
+    float tickBalance = unitBalance(playerView.currentTick);
+    float currentBalance = float(myBuiderUnits.size())/float(myAtackUnits.size() + myBuiderUnits.size());
+    this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, 
+                                                                         Vec2Float(0, 0), colors::white), 
+                                                                         "Current balance: "+to_string(currentBalance)+" / "+to_string(tickBalance), 
+                                                                         0, 20));
+
     return Action(orders);
 }
 
@@ -266,7 +273,6 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, const PlayerVie
 
         ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
         ColoredVertex B{std::make_shared<Vec2Float>(nearestResource.position.x, nearestResource.position.y), {0, 0}, colors::red};
-        // ColoredVertex C{std::make_shared<Vec2Float>(50, 100), {0, 0}, colors::red};
         std::vector<ColoredVertex> line{A, B};
         this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
 
@@ -300,10 +306,12 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, const PlayerVie
 EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerView& playerView)
 {
     EntityAction resultAction;
-    float currentBalance = (myBuiderUnits.size() + builderUnitOrder)/(myAtackUnits.size() + atackUnitOrder + myBuiderUnits.size() + builderUnitOrder);
+    float tickBalance = unitBalance(playerView.currentTick);
+    float currentBalance = float(myBuiderUnits.size() + builderUnitOrder)/float(myAtackUnits.size() + atackUnitOrder + myBuiderUnits.size() + builderUnitOrder);
+
     if (entity.entityType == EntityType::BUILDER_BASE)
     {
-        if (currentBalance < unitBalance(playerView.currentTick))
+        if (currentBalance < tickBalance)
         {
             BuildAction action;
             action.entityType = EntityType::BUILDER_UNIT;
@@ -315,7 +323,7 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
     }
     else if (entity.entityType == EntityType::RANGED_BASE)
     {
-        if (currentBalance >= unitBalance(playerView.currentTick))
+        if (currentBalance >= tickBalance)
         {
             BuildAction action;
             action.entityType = EntityType::RANGED_UNIT;
@@ -327,7 +335,7 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
     }
     else if (entity.entityType == EntityType::MELEE_BASE)
     {
-        if (currentBalance >= unitBalance(playerView.currentTick))
+        if (currentBalance >= tickBalance)
         {
             BuildAction action;
             action.entityType = EntityType::MELEE_UNIT;
