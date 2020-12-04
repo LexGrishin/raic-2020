@@ -20,6 +20,7 @@ public:
     std::vector<Entity> resourses, 
                    enemyBuilderUnits, enemyAtackUnits, enemyBuildings, enemyHouses,
                    myBuiderUnits, myAtackUnits, myBuildings, myHouses;
+    std::unordered_map<int, Entity> reachableResourses;
 
     std::unordered_map<EntityType, EntityProperties> entityProperties;
 
@@ -27,10 +28,11 @@ public:
 
     void setGlobals(const PlayerView& playerView);
     int distance(Entity& e1, Entity& e2);
-    EntityAction chooseBuilderUnitAction(Entity& entity, const PlayerView& playerView);
+    EntityAction chooseBuilderUnitAction(Entity& entity, const PlayerView& playerView, std::vector<std::vector<int>>& map);
     EntityAction chooseRecruitUnitAction(Entity& entity, const PlayerView& playerView);
     EntityAction chooseAtackUnitAction(Entity& entity, const PlayerView& playerView);
-    Entity findNearestEntity(Entity& entity, std::vector<Entity>& entities);
+    Entity findNearestEntity(Entity& entity, std::vector<Entity>& entities, std::vector<std::vector<int>>& map);
+    Entity findNearestReachableResource(Entity& entity, std::unordered_map<int, Entity>& entities);
 };
 
 #endif

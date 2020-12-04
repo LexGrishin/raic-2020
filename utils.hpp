@@ -27,4 +27,8 @@ struct PlayerPopulation
 
 float unitBalance(float x);
 
+void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int size, int padding);
+
+bool isAvailable(std::vector<std::vector<int>>& map, Vec2Int pos, int size);
+
 #endif

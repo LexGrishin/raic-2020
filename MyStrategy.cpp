@@ -13,6 +13,8 @@ MyStrategy::MyStrategy() {}
 
 Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugInterface)
 {
+    std::unordered_map<int, EntityAction> orders{};
+
     this->debugData.clear();
     this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, 
                                                                          Vec2Float(0, 0), colors::white), 
@@ -34,13 +36,15 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         
     
     this->myAvailableResources = playersInfo[playerView.myId].resource;
-    std::unordered_map<int, EntityAction> orders{};
-    int map [playerView.mapSize][playerView.mapSize];
-    for (int i = 0; i < playerView.mapSize; i++)
-        for (int j = 0; j < playerView.mapSize; j++)
-            map[i][j] = EMPTY_OR_UNKNOWN;
     
+    vector<vector<int>> occupiedCellsMap(playerView.mapSize, vector<int>(playerView.mapSize, 0));
+    vector<vector<int>> buildCellsMap(playerView.mapSize, vector<int>(playerView.mapSize, 0));
+    vector<vector<int>> avoidZonesMap(playerView.mapSize, vector<int>(playerView.mapSize, 0));
+    vector<vector<int>> attackMap(playerView.mapSize, vector<int>(playerView.mapSize, 0));
+    
+      
     resourses.clear(); 
+    reachableResourses.clear();
     enemyBuilderUnits.clear();
     enemyAtackUnits.clear();
     enemyBuildings.clear();
@@ -52,22 +56,27 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     builderUnitOrder = 0;
     atackUnitOrder = 0;
 
-    // Fill map and unit arrays.
+    // Fill maps and unit arrays.
     for (Entity entity : playerView.entities)
     {
-        int entitySize = playerView.entityProperties.at(entity.entityType).size;
-        for (int i=entity.position.x; i < entity.position.x + entitySize; i++)
-            for (int j=entity.position.x; j < entity.position.x + entitySize; j++)
-                map[i][j] = entity.entityType;
-        
+        int entitySize = entityProperties[entity.entityType].size;
+        fillMapCells(occupiedCellsMap, entity.position, entitySize, 0);
+        if ((entity.entityType == EntityType::HOUSE)
+            ||(entity.entityType == EntityType::BUILDER_BASE) 
+            ||(entity.entityType == EntityType::MELEE_BASE)
+            ||(entity.entityType == EntityType::RANGED_BASE)
+            ||(entity.entityType == EntityType::TURRET)
+           )
+           fillMapCells(buildCellsMap, entity.position, entitySize, 1);
+                
         if (entity.playerId == nullptr)
         {
             resourses.emplace_back(entity);
         }
         else if (*entity.playerId != playerView.myId)
         {
-            playerPopulation[*entity.playerId].available += playerView.entityProperties.at(entity.entityType).populationProvide;
-            playerPopulation[*entity.playerId].inUse += playerView.entityProperties.at(entity.entityType).populationUse;
+            playerPopulation[*entity.playerId].available += entityProperties[entity.entityType].populationProvide;
+            playerPopulation[*entity.playerId].inUse += entityProperties[entity.entityType].populationUse;
             switch (entity.entityType)
             {
             case EntityType::BUILDER_UNIT:
@@ -103,8 +112,8 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         }
         else
         {
-            playerPopulation[*entity.playerId].available += playerView.entityProperties.at(entity.entityType).populationProvide;
-            playerPopulation[*entity.playerId].inUse += playerView.entityProperties.at(entity.entityType).populationUse;
+            playerPopulation[*entity.playerId].available += entityProperties[entity.entityType].populationProvide;
+            playerPopulation[*entity.playerId].inUse += entityProperties[entity.entityType].populationUse;
             switch (entity.entityType)
             {
             case EntityType::BUILDER_UNIT:
@@ -140,12 +149,18 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         }
     }
 
+    for (Entity res : resourses)
+    {
+        if (isAvailable(occupiedCellsMap, res.position, entityProperties[EntityType::RESOURCE].size))
+            reachableResourses[res.id] = res;
+    }
+
     this->myAvailableResources = playersInfo[playerView.myId].resource;
     this->myAvailablePopulation = playerPopulation[playerView.myId].available - playerPopulation[playerView.myId].inUse;
 
     for (Entity entity : myBuiderUnits)
     {
-        EntityAction action = chooseBuilderUnitAction(entity, playerView);
+        EntityAction action = chooseBuilderUnitAction(entity, playerView, occupiedCellsMap);
         orders[entity.id] = action;
     }
 
@@ -224,29 +239,29 @@ int MyStrategy::distance(Entity& e1, Entity& e2)
     return dx + dy - 1;
 }
 
-EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, const PlayerView& playerView)
+EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, const PlayerView& playerView, vector<vector<int>>& map)
 {
     EntityAction resultAction;
-    Entity nearestResource = findNearestEntity(entity, resourses);
-    Entity nearestEnemyAtackUnit = findNearestEntity(entity, enemyAtackUnits);
-    Entity nearestEnemyBuilderUnit = findNearestEntity(entity, enemyBuilderUnits);
-    if (distance(entity, nearestEnemyAtackUnit)<=(*entityProperties[nearestEnemyAtackUnit.entityType].attack).attackRange)
+    Entity nearestResource = findNearestEntity(entity, resourses, map);
+    Entity nearestEnemyAtackUnit = findNearestEntity(entity, enemyAtackUnits, map);
+    Entity nearestEnemyBuilderUnit = findNearestEntity(entity, enemyBuilderUnits, map);
+    if ((nearestEnemyAtackUnit.id != -1) && (distance(entity, nearestEnemyAtackUnit)<(*entityProperties[nearestEnemyAtackUnit.entityType].attack).attackRange))
     {
         AttackAction action;
         action.target = std::make_shared<int>(nearestEnemyAtackUnit.id);
         resultAction.attackAction = std::make_shared<AttackAction>(action);
     }
-    else if (distance(entity, nearestEnemyBuilderUnit)<=(*entityProperties[nearestEnemyBuilderUnit.entityType].attack).attackRange)
+    else if ((nearestEnemyBuilderUnit.id != -1) && (distance(entity, nearestEnemyBuilderUnit)<(*entityProperties[nearestEnemyBuilderUnit.entityType].attack).attackRange))
     {
         AttackAction action;
         action.target = std::make_shared<int>(nearestEnemyBuilderUnit.id);
         resultAction.attackAction = std::make_shared<AttackAction>(action);
     }
-    else
+    else if ((nearestResource.id != -1) && (distance(entity, nearestResource)>=(*entityProperties[nearestEnemyBuilderUnit.entityType].attack).attackRange))
     {
         MoveAction action;
         action.target = nearestResource.position;
-        action.breakThrough = true;
+        action.breakThrough = false;
         action.findClosestPosition = true;
 
         ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
@@ -257,7 +272,28 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, const PlayerVie
 
         resultAction.moveAction = std::make_shared<MoveAction>(action);
     }
-    
+    else if ((nearestResource.id != -1) && (distance(entity, nearestResource)<(*entityProperties[nearestEnemyBuilderUnit.entityType].attack).attackRange))
+    {
+        AttackAction action;
+        action.target = std::make_shared<int>(nearestResource.id);
+        resultAction.attackAction = std::make_shared<AttackAction>(action);
+    }
+    else
+    {
+        MoveAction action;
+        if (nearestEnemyAtackUnit.id != 1)
+        {
+            action.target = nearestEnemyAtackUnit.position;
+            action.breakThrough = false;
+            action.findClosestPosition = true;
+        }
+        else if (nearestEnemyBuilderUnit.id != -1)
+        {
+            action.target = nearestEnemyBuilderUnit.position;
+            action.breakThrough = false;
+            action.findClosestPosition = true;
+        }
+    }
     return resultAction;
 }
 
@@ -325,18 +361,39 @@ EntityAction MyStrategy::chooseAtackUnitAction(Entity& entity, const PlayerView&
     return resultAction;
 }
 
-Entity MyStrategy::findNearestEntity(Entity& entity, std::vector<Entity>& entities)
+Entity MyStrategy::findNearestEntity(Entity& entity, std::vector<Entity>& entities, vector<vector<int>>& map)
 {
     int min_dist = 100000;
     Entity nearestEntity;
+    nearestEntity.id = -1;
     for (Entity e : entities)
     {
         int d = distance(entity, e);
-        if (d < min_dist)
+        if ((d < min_dist) && (isAvailable(map, e.position, entityProperties[e.entityType].size) || d == 0))
         {
             min_dist = d;
             nearestEntity = e;
         }
     }
+    return nearestEntity;
+}
+
+Entity MyStrategy::findNearestReachableResource(Entity& entity, std::unordered_map<int, Entity>& entities)
+{
+    int min_dist = 100000;
+    int nearestEntityId = -1;
+    Entity nearestEntity;
+    nearestEntity.id = -1;
+    for (auto& e : entities)
+    {
+        int d = distance(entity, e.second);
+        if (d < min_dist)
+        {
+            min_dist = d;
+            nearestEntity = e.second;
+            nearestEntityId = e.first;
+        }
+    }
+    entities.erase(nearestEntityId);
     return nearestEntity;
 }
