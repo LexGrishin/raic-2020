@@ -16,14 +16,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     std::unordered_map<int, EntityAction> orders{};
 
     this->debugData.clear();
-    // this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, 
-    //                                                                      Vec2Float(0, 0), colors::white), 
-    //                                                                      "Map size: "+to_string(playerView.mapSize), 
-    //                                                                      0, 20));
-    // this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, 
-    //                                                                      Vec2Float(0, -20), colors::white), 
-    //                                                                      "My ID: "+to_string(playerView.myId), 
-    //                                                                   0, 20));
+    
     setGlobals(playerView);
     std::unordered_map<int, Player> playersInfo;
     std::unordered_map<int, PlayerPopulation> playerPopulation;

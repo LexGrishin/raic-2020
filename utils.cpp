@@ -3,7 +3,7 @@
 
 float unitBalance(float x)
 {
-    float balance = (-(x - 200.)/(200. + abs(x - 200.)) + 0.8)/2.;
+    float balance = (-(x - 200.)/(200. + abs(x - 200.)) + 0.8)/2. + 0.1;
     return balance;
 }
 
