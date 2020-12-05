@@ -31,7 +31,7 @@ public:
     EntityAction chooseBuilderUnitAction(Entity& entity, const PlayerView& playerView, std::vector<std::vector<int>>& map);
     EntityAction chooseRecruitUnitAction(Entity& entity, const PlayerView& playerView);
     EntityAction chooseAtackUnitAction(Entity& entity, const PlayerView& playerView, std::vector<std::vector<int>>& map);
-    Entity findNearestEntity(Entity& entity, std::vector<Entity>& entities, std::vector<std::vector<int>>& map);
+    Entity findNearestEntity(Entity& entity, std::vector<Entity>& entities, std::vector<std::vector<int>>& map, bool ignoreAvailable);
     Entity findNearestReachableResource(Entity& entity, std::unordered_map<int, Entity>& entities);
 };
 

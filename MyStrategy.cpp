@@ -46,6 +46,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     myAtackUnits.clear();
     myBuildings.clear();
     myHouses.clear();
+    myDamagedBuildings.clear();
     builderUnitOrder = 0;
     atackUnitOrder = 0;
 
@@ -254,10 +255,10 @@ int MyStrategy::distance(Entity& e1, Entity& e2)
 EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, const PlayerView& playerView, vector<vector<int>>& map)
 {
     EntityAction resultAction;
-    Entity nearestResource = findNearestEntity(entity, resourses, map);
-    Entity nearestEnemyAtackUnit = findNearestEntity(entity, enemyAtackUnits, map);
-    Entity nearestEnemyBuilderUnit = findNearestEntity(entity, enemyBuilderUnits, map);
-    Entity nearestDamagedBuilding = findNearestEntity(entity, myDamagedBuildings, map);
+    Entity nearestResource = findNearestEntity(entity, resourses, map, false);
+    Entity nearestEnemyAtackUnit = findNearestEntity(entity, enemyAtackUnits, map, false);
+    Entity nearestEnemyBuilderUnit = findNearestEntity(entity, enemyBuilderUnits, map, false);
+    Entity nearestDamagedBuilding = findNearestEntity(entity, myDamagedBuildings, map, false);
 
     if ((nearestEnemyAtackUnit.id != -1) && (distance(entity, nearestEnemyAtackUnit)<(*entityProperties[entity.entityType].attack).attackRange))
     {
@@ -271,7 +272,7 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, const PlayerVie
         action.target = std::make_shared<int>(nearestEnemyBuilderUnit.id);
         resultAction.attackAction = std::make_shared<AttackAction>(action);
     }
-    else if ((nearestDamagedBuilding.id != -1) && (distance(entity, nearestDamagedBuilding) > 0) && (distance(entity, nearestDamagedBuilding) < 6))
+    else if ((nearestDamagedBuilding.id != -1) && (distance(entity, nearestDamagedBuilding) > 0) && (distance(entity, nearestDamagedBuilding) < 15))
     {
         MoveAction action;
         action.target = nearestDamagedBuilding.position;
@@ -389,10 +390,13 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
 EntityAction MyStrategy::chooseAtackUnitAction(Entity& entity, const PlayerView& playerView, vector<vector<int>>& map)
 {
     EntityAction resultAction;
+    bool ignoreAvailable = false;
+    if (entity.entityType == EntityType::RANGED_UNIT || entity.entityType == EntityType::TURRET)
+        ignoreAvailable = true;
     
-    Entity nearestEnemyAttackUnit = findNearestEntity(entity, enemyAtackUnits, map);
-    Entity nearestEnemyBuilderUnit = findNearestEntity(entity, enemyBuilderUnits, map);
-    Entity nearestEnemyBuilding = findNearestEntity(entity, enemyBuildings, map);
+    Entity nearestEnemyAttackUnit = findNearestEntity(entity, enemyAtackUnits, map, ignoreAvailable);
+    Entity nearestEnemyBuilderUnit = findNearestEntity(entity, enemyBuilderUnits, map, ignoreAvailable);
+    Entity nearestEnemyBuilding = findNearestEntity(entity, enemyBuildings, map, ignoreAvailable);
     if (nearestEnemyAttackUnit.id != -1)
     {
         if (distance(entity, nearestEnemyAttackUnit)>=(*entityProperties[entity.entityType].attack).attackRange)
@@ -448,7 +452,7 @@ EntityAction MyStrategy::chooseAtackUnitAction(Entity& entity, const PlayerView&
     {
         AttackAction action;
         AutoAttack autoAttack;
-        autoAttack.pathfindRange = 40;
+        autoAttack.pathfindRange = 160;
         autoAttack.validTargets = {EntityType::RANGED_UNIT,
                                 EntityType::MELEE_UNIT,
                                 EntityType::TURRET,
@@ -464,7 +468,7 @@ EntityAction MyStrategy::chooseAtackUnitAction(Entity& entity, const PlayerView&
     return resultAction;
 }
 
-Entity MyStrategy::findNearestEntity(Entity& entity, std::vector<Entity>& entities, vector<vector<int>>& map)
+Entity MyStrategy::findNearestEntity(Entity& entity, std::vector<Entity>& entities, vector<vector<int>>& map, bool ignoreAvailable)
 {
     int min_dist = 100000;
     Entity nearestEntity;
@@ -472,7 +476,7 @@ Entity MyStrategy::findNearestEntity(Entity& entity, std::vector<Entity>& entiti
     for (Entity e : entities)
     {
         int d = distance(entity, e);
-        if ((d < min_dist) && (isAvailable(map, e.position, entityProperties[e.entityType].size) || d == 0))
+        if ((d < min_dist) && (isAvailable(map, e.position, entityProperties[e.entityType].size) || d == 0 || ignoreAvailable))
         {
             min_dist = d;
             nearestEntity = e;
