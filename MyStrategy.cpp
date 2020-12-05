@@ -355,8 +355,8 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
     float tickBalance = unitBalance(playerView.currentTick);
     float currentBalance = float(myBuiderUnits.size() + builderUnitOrder)/float(myAttackUnits.size() + atackUnitOrder + myBuiderUnits.size() + builderUnitOrder);
     bool reqruitBuilder = false;
-    if ((myAvailableResources > 200) && (myAvailableResources < 1500))
-        reqruitBuilder = true;
+    if (myAvailableResources - lastAvailableResources < 20)
+       reqruitBuilder = true; 
     if (entity.entityType == EntityType::BUILDER_BASE)
     {
         if ((currentBalance < tickBalance) || (reqruitBuilder == true))

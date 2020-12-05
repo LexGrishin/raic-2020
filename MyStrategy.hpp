@@ -17,6 +17,7 @@ public:
     int atackUnitOrder = 0;
     int builderUnitOrder = 0;
     int constructOrder = 0;
+    int lastAvailableResources = 0;
 
     std::vector<Entity> resourses, 
                         availableResourses,
