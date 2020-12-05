@@ -19,7 +19,7 @@ public:
 
     std::vector<Entity> resourses, 
                    enemyBuilderUnits, enemyAtackUnits, enemyBuildings, enemyHouses,
-                   myBuiderUnits, myAtackUnits, myBuildings, myHouses;
+                   myBuiderUnits, myAtackUnits, myBuildings, myHouses, myDamagedBuildings;
     std::unordered_map<int, Entity> reachableResourses;
 
     std::unordered_map<EntityType, EntityProperties> entityProperties;

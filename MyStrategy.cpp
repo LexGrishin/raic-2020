@@ -119,22 +119,40 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
                 myAtackUnits.emplace_back(entity);
                 break;
             case EntityType::TURRET:
-                myAtackUnits.emplace_back(entity);
+                if (entity.health < entityProperties[entity.entityType].maxHealth)
+                    myDamagedBuildings.emplace_back(entity);
+                else
+                    myAtackUnits.emplace_back(entity);
                 break;
             case EntityType::BUILDER_BASE:
-                myBuildings.emplace_back(entity);
+                if (entity.health < entityProperties[entity.entityType].maxHealth)
+                    myDamagedBuildings.emplace_back(entity);
+                else
+                    myBuildings.emplace_back(entity);
                 break;
             case EntityType::MELEE_BASE:
-                myBuildings.emplace_back(entity);
+                if (entity.health < entityProperties[entity.entityType].maxHealth)
+                    myDamagedBuildings.emplace_back(entity);
+                else
+                    myBuildings.emplace_back(entity);
                 break;
             case EntityType::RANGED_BASE:
-                myBuildings.emplace_back(entity);
+                if (entity.health < entityProperties[entity.entityType].maxHealth)
+                    myDamagedBuildings.emplace_back(entity);
+                else
+                    myBuildings.emplace_back(entity);
                 break;
             case EntityType::HOUSE:
-                myHouses.emplace_back(entity);
+                if (entity.health < entityProperties[entity.entityType].maxHealth)
+                    myDamagedBuildings.emplace_back(entity);
+                else
+                    myHouses.emplace_back(entity);
                 break;
             case EntityType::WALL:
-                myHouses.emplace_back(entity);
+                if (entity.health < entityProperties[entity.entityType].maxHealth)
+                    myDamagedBuildings.emplace_back(entity);
+                else
+                    myHouses.emplace_back(entity);
                 break;
             default:
                 break;
@@ -187,12 +205,6 @@ void MyStrategy::debugUpdate(const PlayerView& playerView, DebugInterface& debug
         debugInterface.send(DebugCommand::Add(item));
     }
     debugInterface.getState();
-
-    // ColoredVertex A{std::make_shared<Vec2Float>(10, 10), {0, 0}, colors::red};
-    // ColoredVertex B{std::make_shared<Vec2Float>(100, 10), {0, 0}, colors::red};
-    // ColoredVertex C{std::make_shared<Vec2Float>(50, 100), {0, 0}, colors::red};
-    // std::vector<ColoredVertex> triangle{A, B, C};
-    // auto debugTriangle = std::make_shared<DebugData::Primitives>(triangle, PrimitiveType::TRIANGLES);
 }
 
 void MyStrategy::setGlobals(const PlayerView& playerView)
@@ -245,19 +257,41 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, const PlayerVie
     Entity nearestResource = findNearestEntity(entity, resourses, map);
     Entity nearestEnemyAtackUnit = findNearestEntity(entity, enemyAtackUnits, map);
     Entity nearestEnemyBuilderUnit = findNearestEntity(entity, enemyBuilderUnits, map);
-    if ((nearestEnemyAtackUnit.id != -1) && (distance(entity, nearestEnemyAtackUnit)<(*entityProperties[nearestEnemyAtackUnit.entityType].attack).attackRange))
+    Entity nearestDamagedBuilding = findNearestEntity(entity, myDamagedBuildings, map);
+
+    if ((nearestEnemyAtackUnit.id != -1) && (distance(entity, nearestEnemyAtackUnit)<(*entityProperties[entity.entityType].attack).attackRange))
     {
         AttackAction action;
         action.target = std::make_shared<int>(nearestEnemyAtackUnit.id);
         resultAction.attackAction = std::make_shared<AttackAction>(action);
     }
-    else if ((nearestEnemyBuilderUnit.id != -1) && (distance(entity, nearestEnemyBuilderUnit)<(*entityProperties[nearestEnemyBuilderUnit.entityType].attack).attackRange))
+    else if ((nearestEnemyBuilderUnit.id != -1) && (distance(entity, nearestEnemyBuilderUnit)<(*entityProperties[entity.entityType].attack).attackRange))
     {
         AttackAction action;
         action.target = std::make_shared<int>(nearestEnemyBuilderUnit.id);
         resultAction.attackAction = std::make_shared<AttackAction>(action);
     }
-    else if ((nearestResource.id != -1) && (distance(entity, nearestResource)>=(*entityProperties[nearestEnemyBuilderUnit.entityType].attack).attackRange))
+    else if ((nearestDamagedBuilding.id != -1) && (distance(entity, nearestDamagedBuilding) > 0) && (distance(entity, nearestDamagedBuilding) < 6))
+    {
+        MoveAction action;
+        action.target = nearestDamagedBuilding.position;
+        action.breakThrough = false;
+        action.findClosestPosition = true;
+
+        ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
+        ColoredVertex B{std::make_shared<Vec2Float>(nearestDamagedBuilding.position.x, nearestDamagedBuilding.position.y), {0, 0}, colors::green};
+        std::vector<ColoredVertex> line{A, B};
+        this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+
+        resultAction.moveAction = std::make_shared<MoveAction>(action);
+    }
+    else if ((nearestDamagedBuilding.id != -1) && (distance(entity, nearestDamagedBuilding) == 0))
+    {
+        RepairAction action;
+        action.target = nearestDamagedBuilding.id;
+        resultAction.repairAction = std::make_shared<RepairAction>(action);
+    }
+    else if ((nearestResource.id != -1) && (distance(entity, nearestResource)>=(*entityProperties[entity.entityType].attack).attackRange))
     {
         MoveAction action;
         action.target = nearestResource.position;
@@ -271,27 +305,37 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, const PlayerVie
 
         resultAction.moveAction = std::make_shared<MoveAction>(action);
     }
-    else if ((nearestResource.id != -1) && (distance(entity, nearestResource)<(*entityProperties[nearestEnemyBuilderUnit.entityType].attack).attackRange))
+    else if ((nearestResource.id != -1) && (distance(entity, nearestResource)<(*entityProperties[entity.entityType].attack).attackRange))
     {
         AttackAction action;
         action.target = std::make_shared<int>(nearestResource.id);
         resultAction.attackAction = std::make_shared<AttackAction>(action);
     }
-    else
+    else if (nearestEnemyBuilderUnit.id != -1)
     {
         MoveAction action;
-        if (nearestEnemyAtackUnit.id != 1)
-        {
-            action.target = nearestEnemyAtackUnit.position;
-            action.breakThrough = false;
-            action.findClosestPosition = true;
-        }
-        else if (nearestEnemyBuilderUnit.id != -1)
-        {
-            action.target = nearestEnemyBuilderUnit.position;
-            action.breakThrough = false;
-            action.findClosestPosition = true;
-        }
+        action.target = nearestEnemyBuilderUnit.position;
+        action.breakThrough = false;
+        action.findClosestPosition = true;
+        resultAction.moveAction = std::make_shared<MoveAction>(action);
+
+        ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
+        ColoredVertex B{std::make_shared<Vec2Float>(nearestEnemyBuilderUnit.position.x, nearestEnemyBuilderUnit.position.y), {0, 0}, colors::red};
+        std::vector<ColoredVertex> line{A, B};
+        this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+    }
+    else if (nearestEnemyAtackUnit.id != -1)
+    {   
+        MoveAction action;
+        action.target = nearestEnemyAtackUnit.position;
+        action.breakThrough = false;
+        action.findClosestPosition = true;
+        resultAction.moveAction = std::make_shared<MoveAction>(action);
+
+        ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
+        ColoredVertex B{std::make_shared<Vec2Float>(nearestEnemyAtackUnit.position.x, nearestEnemyAtackUnit.position.y), {0, 0}, colors::red};
+        std::vector<ColoredVertex> line{A, B};
+        this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
     }
     return resultAction;
 }
