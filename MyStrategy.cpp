@@ -182,24 +182,24 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         orders[entity.id] = action;
     }
 
-    // for (int i=0; i < mapAttack[0].size(); i++)
-    //     for (int j=0; j < mapAttack[0].size(); j++)
+    // for (int i=0; i < mapDamage[0].size(); i++)
+    //     for (int j=0; j < mapDamage[0].size(); j++)
     //     {
-    //         if (mapAttack[i][j] != 0)
+    //         if (mapDamage[i][j] != 0)
     //         {
     //             this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(std::make_shared<Vec2Float>(i, j), 
     //                                                                      Vec2Float(0, 0), colors::red), 
-    //                                                                      to_string(mapAttack[i][j]), 
+    //                                                                      to_string(mapDamage[i][j]), 
     //                                                                      0, 10));
     //         }
     //     }
 
     float tickBalance = unitBalance(playerView.currentTick);
     float currentBalance = float(myBuiderUnits.size())/float(myAttackUnits.size() + myBuiderUnits.size());
-    this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, 
-                                                                         Vec2Float(0, 0), colors::white), 
-                                                                         "Current balance: "+to_string(currentBalance)+" / "+to_string(tickBalance), 
-                                                                         0, 20));
+    // this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, 
+    //                                                                      Vec2Float(0, 0), colors::white), 
+    //                                                                      "Current balance: "+to_string(currentBalance)+" / "+to_string(tickBalance), 
+    //                                                                      0, 20));
 
     return Action(orders);
 }
