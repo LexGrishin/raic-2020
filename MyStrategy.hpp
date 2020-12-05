@@ -16,6 +16,8 @@ public:
     int myAvailablePopulation = 0;
     int atackUnitOrder = 0;
     int builderUnitOrder = 0;
+    int constructOrder = 0;
+    std::vector<Entity> possibleBuildPositions;
 
     std::vector<Entity> resourses, 
                    enemyBuilderUnits, enemyAtackUnits, enemyBuildings, enemyHouses,
@@ -31,7 +33,9 @@ public:
     EntityAction chooseBuilderUnitAction(Entity& entity, const PlayerView& playerView, std::vector<std::vector<int>>& map);
     EntityAction chooseRecruitUnitAction(Entity& entity, const PlayerView& playerView);
     EntityAction chooseAtackUnitAction(Entity& entity, const PlayerView& playerView, std::vector<std::vector<int>>& map);
+    ConstructAction constructHouse(Vec2Int buildingPosition, std::vector<std::vector<int>>& map);
     Entity findNearestEntity(Entity& entity, std::vector<Entity>& entities, std::vector<std::vector<int>>& map, bool ignoreAvailable);
+    // Vec2Int findPosNearEntity
     Entity findNearestReachableResource(Entity& entity, std::unordered_map<int, Entity>& entities);
 };
 

@@ -26,9 +26,17 @@ struct PlayerPopulation
     int available;
 };
 
+struct ConstructAction
+{
+    int entityId;
+    EntityAction entityAction;
+};
+
 float unitBalance(float x);
 
 void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int size, int padding);
+
+std::vector<Entity> findFreePosOnBuildCellMap(std::vector<std::vector<int>>& map, int size);
 
 bool isAvailable(std::vector<std::vector<int>>& map, Vec2Int pos, int size);
 
