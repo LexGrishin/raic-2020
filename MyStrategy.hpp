@@ -17,12 +17,13 @@ public:
     int atackUnitOrder = 0;
     int builderUnitOrder = 0;
     int constructOrder = 0;
-    std::vector<Entity> possibleBuildPositions;
 
     std::vector<Entity> resourses, 
-                   enemyBuilderUnits, enemyAtackUnits, enemyBuildings, enemyHouses,
-                   myBuiderUnits, myAtackUnits, myBuildings, myHouses, myDamagedBuildings;
-    std::unordered_map<int, Entity> reachableResourses;
+                        availableResourses,
+                        enemyEntities, 
+                        myBuiderUnits, myAttackUnits, myTurrets,
+                        myBuildings, myDamagedBuildings,
+                        possibleBuildPositions;
 
     std::unordered_map<EntityType, EntityProperties> entityProperties;
 
@@ -32,7 +33,10 @@ public:
     int distance(Entity& e1, Entity& e2);
     EntityAction chooseBuilderUnitAction(Entity& entity, const PlayerView& playerView, std::vector<std::vector<int>>& map);
     EntityAction chooseRecruitUnitAction(Entity& entity, const PlayerView& playerView);
-    EntityAction chooseAtackUnitAction(Entity& entity, const PlayerView& playerView, std::vector<std::vector<int>>& map);
+    EntityAction chooseAtackUnitAction(Entity& entity, 
+                                       const PlayerView& playerView, 
+                                       std::vector<std::vector<int>>& mapAttack, 
+                                       std::vector<std::vector<int>>& mapDamage);
     ConstructAction constructHouse(Vec2Int buildingPosition, std::vector<std::vector<int>>& map);
     Entity findNearestEntity(Entity& entity, std::vector<Entity>& entities, std::vector<std::vector<int>>& map, bool ignoreAvailable);
     // Vec2Int findPosNearEntity

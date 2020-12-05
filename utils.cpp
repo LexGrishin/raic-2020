@@ -36,6 +36,25 @@ void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int size, int
         for (int j = y_start; j < y_finish; j++)
             map[i][j] = 1;
 }
+void fillDamageMap(std::vector<std::vector<int>>& map, Vec2Int pos, int radius, int damage)
+{
+    int mapSize = map[0].size();
+    int x_min = 0;
+    int x_max = 0;
+    if (pos.x - radius <= 0) x_min = 0; else x_min = pos.x - radius;
+    if (pos.x + radius >= mapSize) x_max = mapSize; else x_max = pos.x + radius + 1;
+
+    for (int x = x_min; x < x_max; x++)
+    {
+        int y_min = 0;
+        int y_max = 0;
+        int dy = radius - abs(x - pos.x);
+        if (pos.y - dy <= 0) y_min = 0; else y_min = pos.y - dy;
+        if (pos.y + dy >= mapSize) y_max = mapSize; else y_max = pos.y + dy + 1;
+        for (int y = y_min; y < y_max; y++)
+            map[x][y] += damage;
+    }
+}
 
 std::vector<Entity> findFreePosOnBuildCellMap(std::vector<std::vector<int>>& map, int size)
 {

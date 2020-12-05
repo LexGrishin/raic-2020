@@ -35,6 +35,7 @@ struct ConstructAction
 float unitBalance(float x);
 
 void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int size, int padding);
+void fillDamageMap(std::vector<std::vector<int>>& map, Vec2Int pos, int radius, int attack);
 
 std::vector<Entity> findFreePosOnBuildCellMap(std::vector<std::vector<int>>& map, int size);
 
