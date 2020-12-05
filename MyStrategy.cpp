@@ -46,6 +46,11 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     atackUnitOrder = 0;
     constructOrder = 0;
 
+    countBuilderUnits = 0;
+    countMeleeUnits = 0;
+    countRangeUnits = 0;
+
+
     // Fill maps and unit arrays.
     for (Entity entity : playerView.entities)
     {
@@ -82,12 +87,15 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
             {
             case EntityType::BUILDER_UNIT:
                 myBuiderUnits.emplace_back(entity);
+                countBuilderUnits += 1;
                 break;
             case EntityType::RANGED_UNIT:
                 myAttackUnits.emplace_back(entity);
+                countRangeUnits += 1;
                 break;
             case EntityType::MELEE_UNIT:
                 myAttackUnits.emplace_back(entity);
+                countMeleeUnits += 1;
                 break;
             case EntityType::TURRET:
                 if (entity.health < entityProperties[entity.entityType].maxHealth)
@@ -382,6 +390,19 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
         {
             BuildAction action;
             action.entityType = EntityType::RANGED_UNIT;
+            action.position = {entity.position.x + entityProperties[entity.entityType].size, 
+                               entity.position.y + entityProperties[entity.entityType].size - 1};
+            resultAction.buildAction = std::make_shared<BuildAction>(action);
+            atackUnitOrder += 1;
+        }
+        else resultAction.buildAction = nullptr;
+    }
+    else if (entity.entityType == EntityType::MELEE_BASE)
+    {
+        if ((currentBalance >= tickBalance))
+        {
+            BuildAction action;
+            action.entityType = EntityType::MELEE_UNIT;
             action.position = {entity.position.x + entityProperties[entity.entityType].size, 
                                entity.position.y + entityProperties[entity.entityType].size - 1};
             resultAction.buildAction = std::make_shared<BuildAction>(action);

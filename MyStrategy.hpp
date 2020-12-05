@@ -18,6 +18,9 @@ public:
     int builderUnitOrder = 0;
     int constructOrder = 0;
     int lastAvailableResources = 0;
+    int countRangeUnits = 0;
+    int countMeleeUnits = 0;
+    int countBuilderUnits = 0;
 
     std::vector<Entity> resourses, 
                         availableResourses,
