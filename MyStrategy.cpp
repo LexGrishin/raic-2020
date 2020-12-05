@@ -69,8 +69,11 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         }
         else if (*entity.playerId != playerView.myId)
         {
-            playerPopulation[*entity.playerId].available += entityProperties[entity.entityType].populationProvide;
-            playerPopulation[*entity.playerId].inUse += entityProperties[entity.entityType].populationUse;
+            if (entity.active)
+            {
+                playerPopulation[*entity.playerId].available += entityProperties[entity.entityType].populationProvide;
+                playerPopulation[*entity.playerId].inUse += entityProperties[entity.entityType].populationUse;
+            }
             switch (entity.entityType)
             {
             case EntityType::BUILDER_UNIT:
