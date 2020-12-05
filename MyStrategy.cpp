@@ -182,6 +182,12 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         orders[entity.id] = action;
     }
 
+    for (Entity entity : myTurrets)
+    {
+        EntityAction action = chooseAtackUnitAction(entity, playerView, mapAttack, mapDamage);
+        orders[entity.id] = action;
+    }
+
     // for (int i=0; i < mapDamage[0].size(); i++)
     //     for (int j=0; j < mapDamage[0].size(); j++)
     //     {
@@ -363,7 +369,8 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
         {
             BuildAction action;
             action.entityType = EntityType::BUILDER_UNIT;
-            action.position = {entity.position.x, entity.position.y - 1};
+            action.position = {entity.position.x + entityProperties[entity.entityType].size, 
+                               entity.position.y + entityProperties[entity.entityType].size - 1};
             resultAction.buildAction = std::make_shared<BuildAction>(action);
             builderUnitOrder += 1;
         }
@@ -375,24 +382,13 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
         {
             BuildAction action;
             action.entityType = EntityType::RANGED_UNIT;
-            action.position = {entity.position.x, entity.position.y - 1};
+            action.position = {entity.position.x + entityProperties[entity.entityType].size, 
+                               entity.position.y + entityProperties[entity.entityType].size - 1};
             resultAction.buildAction = std::make_shared<BuildAction>(action);
             atackUnitOrder += 1;
         }
         else resultAction.buildAction = nullptr;
     }
-    // else if (entity.entityType == EntityType::MELEE_BASE)
-    // {
-    //     if (currentBalance >= tickBalance)
-    //     {
-    //         BuildAction action;
-    //         action.entityType = EntityType::MELEE_UNIT;
-    //         action.position = {entity.position.x, entity.position.y - 1};
-    //         resultAction.buildAction = std::make_shared<BuildAction>(action);
-    //         atackUnitOrder += 1;
-    //     }
-    //     else resultAction.buildAction = nullptr;
-    // }
     else resultAction.buildAction = nullptr;
     return resultAction;
 }
