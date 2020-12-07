@@ -32,10 +32,22 @@ struct ConstructAction
     EntityAction entityAction;
 };
 
+struct MoveAnalysis
+{
+    int canGo;
+    float distanceToTarget;
+    float distanceToAlly;
+    int maxDamage;
+    float total;
+};
+
 float unitBalance(float x);
 
-void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int size, int padding);
+void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int entityType, int size, int padding);
 void fillDamageMap(std::vector<std::vector<int>>& map, Vec2Int pos, int radius, int attack);
+Vec2Int getRetreatPos(Vec2Int pos, std::vector<std::vector<int>>& mapDamage, std::vector<std::vector<int>>& mapOccupied);
+int countUnitsInRadius(Vec2Int pos, int radius, std::vector<std::vector<int>>& map);
+int countDamageSum(Vec2Int pos, int radius, std::vector<std::vector<int>>& map);
 
 std::vector<Entity> findFreePosOnBuildCellMap(std::vector<std::vector<int>>& map, int size);
 

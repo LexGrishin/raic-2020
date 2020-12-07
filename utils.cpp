@@ -8,7 +8,7 @@ float unitBalance(float x)
     return balance;
 }
 
-void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int size, int padding)
+void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int entityType, int size, int padding)
 {
     int map_size = map[0].size();
     int x_start, x_finish, y_start, y_finish;
@@ -34,7 +34,7 @@ void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int size, int
 
     for (int i = x_start; i < x_finish; i++)
         for (int j = y_start; j < y_finish; j++)
-            map[i][j] = 1;
+            map[i][j] = entityType;
 }
 void fillDamageMap(std::vector<std::vector<int>>& map, Vec2Int pos, int radius, int damage)
 {
@@ -114,4 +114,100 @@ bool isAvailable(std::vector<std::vector<int>>& map, Vec2Int pos, int size)
             if (map[i][bot] == 0)
                 return true;
     return false;
+}
+
+Vec2Int getRetreatPos(Vec2Int pos, std::vector<std::vector<int>>& mapDamage, std::vector<std::vector<int>>& mapOccupied)
+{
+    int mapSize = mapDamage[0].size();
+    int topDamage = 100000;
+    int leftDamage = 100000;
+    int rightDamage = 100000;
+    int botDamage = 100000;
+    int stayDamage = 0;
+    int radius = 3;
+    Vec2Int posTop{pos.x, pos.y + 1};
+    Vec2Int posBot{pos.x, pos.y - 1};
+    Vec2Int posRight{pos.x + 1, pos.y};
+    Vec2Int posLeft{pos.x - 1, pos.y};
+    stayDamage = countDamageSum(pos, radius, mapDamage);
+    if (posTop.y < mapSize)
+        if (mapOccupied[posTop.x][posTop.y] == 0)
+            topDamage = countDamageSum(posTop, radius, mapDamage);
+    if (posBot.y >= 0)
+        if (mapOccupied[posBot.x][posBot.y] == 0)
+            botDamage = countDamageSum(posBot, radius, mapDamage);
+    if (posRight.x < mapSize)
+        if (mapOccupied[posRight.x][posRight.y] == 0)
+            rightDamage = countDamageSum(posRight, radius, mapDamage);
+    if (posLeft.x >= 0)
+        if (mapOccupied[posLeft.x][posLeft.y] == 0)
+            leftDamage = countDamageSum(posLeft, radius, mapDamage);
+    int minDamage = stayDamage;
+    Vec2Int minPos = pos;
+    if (topDamage < minDamage)
+    {
+        minDamage = topDamage;
+        minPos = posTop;
+    }
+    if (botDamage < minDamage)
+    {
+        minDamage = botDamage;
+        minPos = posBot;
+    }
+    if (rightDamage < minDamage)
+    {
+        minDamage = rightDamage;
+        minPos = posRight;
+    }
+    if (leftDamage < minDamage)
+    {
+        minDamage = leftDamage;
+        minPos = posLeft;
+    }
+    return minPos;
+}
+
+int countUnitsInRadius(Vec2Int pos, int radius, std::vector<std::vector<int>>& map)
+{
+    int counter = 0;
+    int mapSize = map[0].size();
+    int x_min = 0;
+    int x_max = 0;
+    if (pos.x - radius <= 0) x_min = 0; else x_min = pos.x - radius;
+    if (pos.x + radius >= mapSize) x_max = mapSize; else x_max = pos.x + radius + 1;
+
+    for (int x = x_min; x < x_max; x++)
+    {
+        int y_min = 0;
+        int y_max = 0;
+        int dy = radius - abs(x - pos.x);
+        if (pos.y - dy <= 0) y_min = 0; else y_min = pos.y - dy;
+        if (pos.y + dy >= mapSize) y_max = mapSize; else y_max = pos.y + dy + 1;
+        for (int y = y_min; y < y_max; y++)
+            if (map[x][y] != -1)
+                counter += 1;
+    }
+    return counter;
+}
+
+int countDamageSum(Vec2Int pos, int radius, std::vector<std::vector<int>>& map)
+{
+    int counter = 0;
+    int mapSize = map[0].size();
+    int x_min = 0;
+    int x_max = 0;
+    if (pos.x - radius <= 0) x_min = 0; else x_min = pos.x - radius;
+    if (pos.x + radius >= mapSize) x_max = mapSize; else x_max = pos.x + radius + 1;
+
+    for (int x = x_min; x < x_max; x++)
+    {
+        int y_min = 0;
+        int y_max = 0;
+        int dy = radius - abs(x - pos.x);
+        if (pos.y - dy <= 0) y_min = 0; else y_min = pos.y - dy;
+        if (pos.y + dy >= mapSize) y_max = mapSize; else y_max = pos.y + dy + 1;
+        for (int y = y_min; y < y_max; y++)
+            counter += map[x][y];
+    }
+    return counter;
 }
