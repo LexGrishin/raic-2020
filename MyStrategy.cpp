@@ -260,23 +260,23 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     // float tickBalance = unitBalance(playerView.currentTick);
     // float currentBalance = float(myBuiderUnits.size())/float(myAttackUnits.size() + myBuiderUnits.size());
 
-    Color color;
-    if (myAvailableResources < 20)
-        color = colors::red;
-    else
-        color = colors::green;
-    this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, Vec2Float(0, 0), colors::white), 
-                                                           "Builders: "+to_string(countBuilderUnits), 
-                                                                         0, 20));
-    this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, Vec2Float(0, -20), colors::white), 
-                                                           "Melee: "+to_string(countMeleeUnits), 
-                                                                         0, 20));
-    this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, Vec2Float(0, -40), colors::white), 
-                                                           "Range: "+to_string(countRangeUnits), 
-                                                                         0, 20));
-    this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(std::make_shared<Vec2Float>(remontPoint.position.x, remontPoint.position.y), 
-                                                                                                     Vec2Float(0, -40), colors::red), 
-                                                           "X", 0, 20));
+    // Color color;
+    // if (myAvailableResources < 20)
+    //     color = colors::red;
+    // else
+    //     color = colors::green;
+    // this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, Vec2Float(0, 0), colors::white), 
+    //                                                        "Builders: "+to_string(countBuilderUnits), 
+    //                                                                      0, 20));
+    // this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, Vec2Float(0, -20), colors::white), 
+    //                                                        "Melee: "+to_string(countMeleeUnits), 
+    //                                                                      0, 20));
+    // this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, Vec2Float(0, -40), colors::white), 
+    //                                                        "Range: "+to_string(countRangeUnits), 
+    //                                                                      0, 20));
+    // this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(std::make_shared<Vec2Float>(remontPoint.position.x, remontPoint.position.y), 
+    //                                                                                                  Vec2Float(0, -40), colors::red), 
+    //                                                        "X", 0, 20));
     return Action(orders);
 }
 
@@ -388,10 +388,10 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, const PlayerVie
         action.breakThrough = false;
         action.findClosestPosition = true;
 
-        ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
-        ColoredVertex B{std::make_shared<Vec2Float>(nearestDamagedBuilding.position.x, nearestDamagedBuilding.position.y), {0, 0}, colors::green};
-        std::vector<ColoredVertex> line{A, B};
-        this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+        // ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
+        // ColoredVertex B{std::make_shared<Vec2Float>(nearestDamagedBuilding.position.x, nearestDamagedBuilding.position.y), {0, 0}, colors::green};
+        // std::vector<ColoredVertex> line{A, B};
+        // this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
 
         resultAction.moveAction = std::make_shared<MoveAction>(action);
     }
@@ -429,10 +429,10 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, const PlayerVie
         action.breakThrough = false;
         action.findClosestPosition = true;
 
-        ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
-        ColoredVertex B{std::make_shared<Vec2Float>(nearestResource.position.x, nearestResource.position.y), {0, 0}, colors::red};
-        std::vector<ColoredVertex> line{A, B};
-        this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+        // ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
+        // ColoredVertex B{std::make_shared<Vec2Float>(nearestResource.position.x, nearestResource.position.y), {0, 0}, colors::red};
+        // std::vector<ColoredVertex> line{A, B};
+        // this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
 
         resultAction.moveAction = std::make_shared<MoveAction>(action);
     }
@@ -450,10 +450,10 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, const PlayerVie
         action.findClosestPosition = true;
         resultAction.moveAction = std::make_shared<MoveAction>(action);
 
-        ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
-        ColoredVertex B{std::make_shared<Vec2Float>(nearestEnemy.position.x, nearestEnemy.position.y), {0, 0}, colors::red};
-        std::vector<ColoredVertex> line{A, B};
-        this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+        // ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
+        // ColoredVertex B{std::make_shared<Vec2Float>(nearestEnemy.position.x, nearestEnemy.position.y), {0, 0}, colors::red};
+        // std::vector<ColoredVertex> line{A, B};
+        // this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
     }
     return resultAction;
 }
@@ -542,10 +542,10 @@ EntityAction MyStrategy::chooseAttackUnitAction(Entity& entity,
             action.findClosestPosition = true;
             resultAction.moveAction = std::make_shared<MoveAction>(action);
 
-            ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::green};
-            ColoredVertex B{std::make_shared<Vec2Float>(nearestEnemy.position.x, nearestEnemy.position.y), {0, 0}, colors::green};
-            std::vector<ColoredVertex> line{A, B};
-            this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+            // ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::green};
+            // ColoredVertex B{std::make_shared<Vec2Float>(nearestEnemy.position.x, nearestEnemy.position.y), {0, 0}, colors::green};
+            // std::vector<ColoredVertex> line{A, B};
+            // this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
         }
         else if (distance(entity, nearestEnemy) >= myAttackRange) // Враг в буферной зоне. Принимаем решение наступать, ждать врага или отступить.
         {
@@ -557,10 +557,10 @@ EntityAction MyStrategy::chooseAttackUnitAction(Entity& entity,
                 action.findClosestPosition = true;
                 resultAction.moveAction = std::make_shared<MoveAction>(action);
 
-                ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
-                ColoredVertex B{std::make_shared<Vec2Float>(nearestEnemy.position.x, nearestEnemy.position.y), {0, 0}, colors::red};
-                std::vector<ColoredVertex> line{A, B};
-                this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+                // ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
+                // ColoredVertex B{std::make_shared<Vec2Float>(nearestEnemy.position.x, nearestEnemy.position.y), {0, 0}, colors::red};
+                // std::vector<ColoredVertex> line{A, B};
+                // this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
             }
             else if (nearbyAllies == nearbyEnemys) // Паритет - ждем.
             {
@@ -570,10 +570,10 @@ EntityAction MyStrategy::chooseAttackUnitAction(Entity& entity,
                 action.findClosestPosition = true;
                 resultAction.moveAction = std::make_shared<MoveAction>(action);
 
-                ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::white};
-                ColoredVertex B{std::make_shared<Vec2Float>(nearestEnemy.position.x, nearestEnemy.position.y), {0, 0}, colors::white};
-                std::vector<ColoredVertex> line{A, B};
-                this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+                // ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::white};
+                // ColoredVertex B{std::make_shared<Vec2Float>(nearestEnemy.position.x, nearestEnemy.position.y), {0, 0}, colors::white};
+                // std::vector<ColoredVertex> line{A, B};
+                // this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
             }
             else // Врагов больше - отступаем, если возможно, если не возможно, то ждем врага.
             {
@@ -584,10 +584,10 @@ EntityAction MyStrategy::chooseAttackUnitAction(Entity& entity,
                 action.findClosestPosition = true;
                 resultAction.moveAction = std::make_shared<MoveAction>(action);
 
-                ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::white};
-                ColoredVertex B{std::make_shared<Vec2Float>(nearestEnemy.position.x, nearestEnemy.position.y), {0, 0}, colors::white};
-                std::vector<ColoredVertex> line{A, B};
-                this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+                // ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::white};
+                // ColoredVertex B{std::make_shared<Vec2Float>(nearestEnemy.position.x, nearestEnemy.position.y), {0, 0}, colors::white};
+                // std::vector<ColoredVertex> line{A, B};
+                // this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
             }
         }
         else // Враг в радиусе поражения. Принимаем решение атаковать врага или отступать.
