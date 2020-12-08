@@ -492,19 +492,19 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
         }
         else resultAction.buildAction = nullptr;
     }
-    // else if (entity.entityType == EntityType::MELEE_BASE)
-    // {
-    //     if ((currentBalance >= tickBalance))
-    //     {
-    //         BuildAction action;
-    //         action.entityType = EntityType::MELEE_UNIT;
-    //         action.position = {entity.position.x + entityProperties[entity.entityType].size, 
-    //                            entity.position.y + entityProperties[entity.entityType].size - 1};
-    //         resultAction.buildAction = std::make_shared<BuildAction>(action);
-    //         atackUnitOrder += 1;
-    //     }
-    //     else resultAction.buildAction = nullptr;
-    // }
+    else if (entity.entityType == EntityType::MELEE_BASE)
+    {
+        if ((currentBalance >= tickBalance) && playerView.currentTick <= 400)
+        {
+            BuildAction action;
+            action.entityType = EntityType::MELEE_UNIT;
+            action.position = {entity.position.x + entityProperties[entity.entityType].size, 
+                               entity.position.y + entityProperties[entity.entityType].size - 1};
+            resultAction.buildAction = std::make_shared<BuildAction>(action);
+            atackUnitOrder += 1;
+        }
+        else resultAction.buildAction = nullptr;
+    }
     else resultAction.buildAction = nullptr;
     return resultAction;
 }
