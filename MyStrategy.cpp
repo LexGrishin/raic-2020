@@ -562,13 +562,33 @@ EntityAction MyStrategy::chooseAttackUnitAction(Entity& entity,
                 // std::vector<ColoredVertex> line{A, B};
                 // this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
             }
-            else if (nearbyAllies == nearbyEnemys) // Паритет - ждем.
+            else if (nearbyAllies == nearbyEnemys) // Паритет
             {
-                MoveAction action;
-                action.target = entity.position;
-                action.breakThrough = false;
-                action.findClosestPosition = true;
-                resultAction.moveAction = std::make_shared<MoveAction>(action);
+                if (entity.entityType == EntityType::RANGED_UNIT) // Если наш юнит РЕНДЖ, то ждем
+                {
+                    MoveAction action;
+                    action.target = entity.position;
+                    action.breakThrough = false;
+                    action.findClosestPosition = true;
+                    resultAction.moveAction = std::make_shared<MoveAction>(action);
+                }
+                else // Наш юнит МИЛИ
+                {
+                    if (nearestEnemy.entityType == EntityType::MELEE_UNIT) // Если враг тоже МИЛИ, то ждем.
+                    {
+                        MoveAction action;
+                        action.target = entity.position;
+                        action.breakThrough = false;
+                        action.findClosestPosition = true;
+                        resultAction.moveAction = std::make_shared<MoveAction>(action);
+                    }
+                    else // Атакуем.
+                    {
+                        AttackAction action;
+                        action.target = std::make_shared<int>(nearestEnemy.id);
+                        resultAction.attackAction = std::make_shared<AttackAction>(action);
+                    }
+                }
 
                 // ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::white};
                 // ColoredVertex B{std::make_shared<Vec2Float>(nearestEnemy.position.x, nearestEnemy.position.y), {0, 0}, colors::white};
