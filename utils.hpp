@@ -49,8 +49,6 @@ Vec2Int getRetreatPos(Vec2Int pos, std::vector<std::vector<int>>& mapDamage, std
 int countUnitsInRadius(Vec2Int pos, int radius, std::vector<std::vector<int>>& map);
 int countDamageSum(Vec2Int pos, int radius, std::vector<std::vector<int>>& map);
 
-std::vector<Entity> findFreePosOnBuildCellMap(std::vector<std::vector<int>>& map, int size);
-
 bool isAvailable(std::vector<std::vector<int>>& map, Vec2Int pos, int size);
 
 #endif

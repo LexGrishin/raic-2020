@@ -3,8 +3,11 @@
 
 float unitBalance(float x)
 {
-    // float balance = (-(x - 200.)/(200. + abs(x - 200.)) + 0.8)/2. + 0.1;
-    float balance = (-(x - 400.)/(200. + abs(x - 400.)) + 0.8)/2. + 0.1;
+    float balance = 0;
+    if (x > 470)
+        balance = 0.4;
+    else
+        balance = (-(x - 400.)/(200. + abs(x - 400.)) + 0.8)/2. + 0.1;
     return balance;
 }
 
@@ -56,38 +59,7 @@ void fillDamageMap(std::vector<std::vector<int>>& map, Vec2Int pos, int radius, 
     }
 }
 
-std::vector<Entity> findFreePosOnBuildCellMap(std::vector<std::vector<int>>& map, int size)
-{
-    std::vector<Entity> positions;
-    int mapSize = map[0].size();
-    int limit = mapSize - size;
-    int step = size + 1;
-    for (int i = 0; i < limit; i+=step)
-        for (int j = 0; j < limit; j+=step)
-        {
-            bool freeArea = true;
-            for (int n = i; n < i + size; n++)
-            {
-                for (int m = j; m < j + size; m++)
-                    if (map[n][m] != 0)
-                    {
-                        freeArea = false;
-                        break;
-                    }
-                if (freeArea == false)
-                    break;
-            }
-            if (freeArea == true)
-            {
-                Vec2Int pos{i, j};
-                Entity position;
-                position.position = pos;
-                position.entityType = EntityType::HOUSE;
-                positions.emplace_back(position);
-            }                       
-        }
-    return positions;
-}
+
 
 bool isAvailable(std::vector<std::vector<int>>& map, Vec2Int pos, int size)
 {
