@@ -244,7 +244,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     // }
     // std::sort(myUnits.begin(), myUnits.end(), [](const Entity& lhs, const Entity& rhs) {return lhs.distToTarget < rhs.distToTarget;});
 
-    int counter = 0;
+    // int counter = 0;
     for (Entity entity : myUnits)
     {
         EntityAction action;
@@ -256,10 +256,10 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
             action = chooseMeleeUnitAction(entity, mapOccupied, mapAlly, mapEnemy, mapDamage);
         orders[entity.id] = action;
 
-        this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(std::make_shared<Vec2Float>(entity.position.x, entity.position.y), 
-                                                                                                     Vec2Float(30, 0), colors::green), 
-                                                                            to_string(counter), 0, 20));
-        counter++;
+        // this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(std::make_shared<Vec2Float>(entity.position.x, entity.position.y), 
+        //                                                                                              Vec2Float(30, 0), colors::green), 
+        //                                                                     to_string(counter), 0, 20));
+        // counter++;
     }
 
     Entity nearestEnemyToBase = findNearestEntity(baseCenter, enemyEntities, mapOccupied, true);
@@ -528,7 +528,7 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
     {
         Entity target = buildOrder[orderId];
         int dist = distance(entity, target);
-        cout<<"Distance: "<<dist<<" | "<<orderId<<" | ("<<target.position.x<<", "<<target.position.y<<")"<<endl;
+        // cout<<"Distance: "<<dist<<" | "<<orderId<<" | ("<<target.position.x<<", "<<target.position.y<<")"<<endl;
         if (dist != 0) 
         {
             MoveAction action;
