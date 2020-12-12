@@ -591,7 +591,7 @@ void MyStrategy::fillBuildOrder(vector<vector<int>>& mapBuilding, std::unordered
 {
     if (buildOrder.size() < 3)
     {
-        if (myAvailablePopulation < 7 && myAvailableResources >= entityProperties[EntityType::HOUSE].cost)
+        if (myAvailablePopulation < 7 && myAvailableResources >= entityProperties[EntityType::HOUSE].initialCost)
         {
             vector<Entity> possibleBuildPositions = findFreePosOnBuildCellMap(mapBuilding, EntityType::HOUSE);
             Entity builder = findNearestFreeBuilder(baseCenter, orders);
