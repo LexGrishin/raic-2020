@@ -28,12 +28,11 @@ public:
     Entity baseCenter;
 
     std::vector<Entity> resourses, 
-                        availableResourses,
                         enemyEntities, 
-                        enemyBuilders,
-                        myBuilderUnits, myAttackUnits, myTurrets,
-                        myBuildings, myDamagedBuildings;
-                        // possibleBuildPositions;
+                        myUnits, 
+                        myTurrets,
+                        myBuildings, 
+                        myDamagedBuildings;
 
     std::unordered_map<EntityType, EntityProperties> entityProperties;
     std::vector<Entity> busyUnits;
@@ -44,24 +43,21 @@ public:
 
     void setGlobals(const PlayerView& playerView);
     int distance(Entity& e1, Entity& e2);
-    // float euclideanDist(Entity& e1, Entity& e2);
     EntityAction chooseBuilderUnitAction(Entity& entity, 
                                          std::vector<std::vector<int>>& mapOccupied,
                                          std::vector<std::vector<int>>& mapDamage);
-    void fillBuildOrder(std::vector<std::vector<int>>& mapBuilding, std::unordered_map<int, EntityAction>& orders);
+    void fillBuildOrder(std::vector<std::vector<int>>& mapBuilding, std::unordered_map<int, EntityAction>& orders, std::vector<std::vector<int>>& mapOccupied);
     EntityAction chooseRecruitUnitAction(Entity& entity, const PlayerView& playerView, int enemyDistToBase, std::vector<std::vector<int>>& mapOccupied);
     EntityAction chooseRangeUnitAction(Entity& entity,
                                         std::vector<std::vector<int>>& mapOccupied, 
                                         std::vector<std::vector<int>>& mapAlly, 
                                         std::vector<std::vector<int>>& mapEnemy,
-                                        std::vector<std::vector<int>>& mapDamage,
-                                        int enemyDistToBase);
+                                        std::vector<std::vector<int>>& mapDamage);
     EntityAction chooseMeleeUnitAction(Entity& entity,
                                         std::vector<std::vector<int>>& mapOccupied, 
                                         std::vector<std::vector<int>>& mapAlly, 
                                         std::vector<std::vector<int>>& mapEnemy,
-                                        std::vector<std::vector<int>>& mapDamage,
-                                        int enemyDistToBase);
+                                        std::vector<std::vector<int>>& mapDamage);
     ConstructAction constructHouse(Vec2Int buildingPosition, std::vector<std::vector<int>>& map);
     Entity findNearestEntity(Entity& entity, std::vector<Entity>& entities, std::vector<std::vector<int>>& map, bool ignoreAvailable);
     Entity findNearestFreeBuilder(Entity& entity, std::unordered_map<int, EntityAction>& orders);
@@ -69,6 +65,7 @@ public:
     Vec2Int findClosestFreePosNearBuilding(Entity& entity, Entity& building, std::vector<std::vector<int>>& mapOccupied);
     void delDeadUnitsFromBuildOrder();
     Vec2Int findPosNearBuilding(Entity& entity, Entity& building);
+    Vec2Int getNextStep(Entity entity, Entity target, std::vector<std::vector<int>>& mapOccupied);
     // Vec2Int findPosNearEntity
     // Entity findNearestReachableResource(Entity& entity, std::unordered_map<int, Entity>& entities);
     // EntityAction getAttackUnitAction(Entity& entity, 

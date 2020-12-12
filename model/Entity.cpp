@@ -48,6 +48,7 @@ Entity Entity::readFrom(InputStream& stream) {
     result.position = Vec2Int::readFrom(stream);
     result.health = stream.readInt();
     result.active = stream.readBool();
+    result.distToTarget = 100000;
     return result;
 }
 void Entity::writeTo(OutputStream& stream) const {

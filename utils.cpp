@@ -136,6 +136,8 @@ Vec2Int getRetreatPos(Vec2Int pos, std::vector<std::vector<int>>& mapDamage, std
         minDamage = leftDamage;
         minPos = posLeft;
     }
+    mapOccupied[pos.x][pos.y] = 0;
+    mapOccupied[minPos.x][minPos.y] = 1;
     return minPos;
 }
 
