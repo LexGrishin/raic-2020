@@ -49,7 +49,7 @@ public:
                                          std::vector<std::vector<int>>& mapOccupied,
                                          std::vector<std::vector<int>>& mapDamage);
     void fillBuildOrder(std::vector<std::vector<int>>& mapBuilding, std::unordered_map<int, EntityAction>& orders);
-    EntityAction chooseRecruitUnitAction(Entity& entity, const PlayerView& playerView, int enemyDistToBase);
+    EntityAction chooseRecruitUnitAction(Entity& entity, const PlayerView& playerView, int enemyDistToBase, std::vector<std::vector<int>>& mapOccupied);
     EntityAction chooseRangeUnitAction(Entity& entity,
                                         std::vector<std::vector<int>>& mapOccupied, 
                                         std::vector<std::vector<int>>& mapAlly, 
@@ -66,6 +66,7 @@ public:
     Entity findNearestEntity(Entity& entity, std::vector<Entity>& entities, std::vector<std::vector<int>>& map, bool ignoreAvailable);
     Entity findNearestFreeBuilder(Entity& entity, std::unordered_map<int, EntityAction>& orders);
     std::vector<Entity> findFreePosOnBuildCellMap(std::vector<std::vector<int>>& map, EntityType type);
+    Vec2Int MyStrategy::findClosestFreePosNearBuilding(Entity& entity, Entity& building, std::vector<std::vector<int>>& mapOccupied);
     void delDeadUnitsFromBuildOrder();
     Vec2Int findPosNearBuilding(Entity& entity, Entity& building);
     // Vec2Int findPosNearEntity
