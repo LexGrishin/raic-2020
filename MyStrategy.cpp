@@ -604,18 +604,27 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
     EntityAction resultAction;
     float tickBalance = unitBalance(playerView.currentTick);
     float currentBalance = float(myBuilderUnits.size())/float(myAttackUnits.size() + myBuilderUnits.size() + 0.000001);
+    int halfMapSize = mapOccupied[0].size()/2;
+    Vec2Int default_pos{halfMapSize, halfMapSize};
 
     if (entity.entityType == EntityType::BUILDER_BASE)
     {
         if ((currentBalance < tickBalance) || (myAvailableResources - lastAvailableResources < -60))
         {
-            BuildAction action;
-            action.entityType = EntityType::BUILDER_UNIT;
             Entity nearestResourse = findNearestEntity(entity, resourses, mapOccupied, true);
+            if (nearestResourse.id == -1)
+                nearestResourse.position = default_pos;
             Vec2Int recruit_pos = findClosestFreePosNearBuilding(nearestResourse, entity, mapOccupied);
-            action.position = recruit_pos;
-            resultAction.buildAction = std::make_shared<BuildAction>(action);
-            builderUnitOrder += 1;
+            
+            if (recruit_pos.x >= 0)
+            {
+                BuildAction action;
+                action.entityType = EntityType::BUILDER_UNIT;
+                action.position = recruit_pos;
+                resultAction.buildAction = std::make_shared<BuildAction>(action);
+                builderUnitOrder += 1;
+            }
+            else resultAction.buildAction = nullptr;
         }
         else resultAction.buildAction = nullptr;
     }
@@ -623,12 +632,19 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
     {
         if ((currentBalance >= tickBalance))
         {
-            BuildAction action;
-            action.entityType = EntityType::RANGED_UNIT;
             Entity nearestEnemy = findNearestEntity(entity, enemyEntities, mapOccupied, true);
+            if (nearestEnemy.id == -1)
+                nearestEnemy.position = default_pos;
             Vec2Int recruit_pos = findClosestFreePosNearBuilding(nearestEnemy, entity, mapOccupied);
-            resultAction.buildAction = std::make_shared<BuildAction>(action);
-            atackUnitOrder += 1;
+            if (recruit_pos.x >= 0)
+            {
+                BuildAction action;
+                action.entityType = EntityType::RANGED_UNIT;
+                action.position = recruit_pos;
+                resultAction.buildAction = std::make_shared<BuildAction>(action);
+                atackUnitOrder += 1;
+            }
+            else resultAction.buildAction = nullptr;
         }
         else resultAction.buildAction = nullptr;
     }
@@ -636,12 +652,19 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
     {
         if (enemyDistToBase < 30)
         {
-            BuildAction action;
-            action.entityType = EntityType::MELEE_UNIT;
             Entity nearestEnemy = findNearestEntity(entity, enemyEntities, mapOccupied, true);
+            if (nearestEnemy.id == -1)
+                nearestEnemy.position = default_pos;
             Vec2Int recruit_pos = findClosestFreePosNearBuilding(nearestEnemy, entity, mapOccupied);
-            resultAction.buildAction = std::make_shared<BuildAction>(action);
-            atackUnitOrder += 1;
+            if (recruit_pos.x >= 0)
+            {
+                BuildAction action;
+                action.entityType = EntityType::MELEE_UNIT;
+                action.position = recruit_pos;
+                resultAction.buildAction = std::make_shared<BuildAction>(action);
+                atackUnitOrder += 1;
+            }
+            else resultAction.buildAction = nullptr;
         }
         else resultAction.buildAction = nullptr;
     }
@@ -987,6 +1010,7 @@ Vec2Int MyStrategy::findClosestFreePosNearBuilding(Entity& entity, Entity& build
             if (mapOccupied[building.position.x - 1][y] == 0)
             {
                 Entity e;
+                e.entityType = EntityType::BUILDER_UNIT;
                 e.position = Vec2Int{building.position.x - 1, y};
                 int dist = distance(entity, e);
                 if (dist < min_dist)
@@ -1002,6 +1026,7 @@ Vec2Int MyStrategy::findClosestFreePosNearBuilding(Entity& entity, Entity& build
             if (mapOccupied[building.position.x + size][y] == 0)
             {
                 Entity e;
+                e.entityType = EntityType::BUILDER_UNIT;
                 e.position = Vec2Int{building.position.x + size, y};
                 int dist = distance(entity, e);
                 if (dist < min_dist)
@@ -1017,6 +1042,7 @@ Vec2Int MyStrategy::findClosestFreePosNearBuilding(Entity& entity, Entity& build
             if (mapOccupied[x][building.position.y + size] == 0)
             {
                 Entity e;
+                e.entityType = EntityType::BUILDER_UNIT;
                 e.position = Vec2Int{x, building.position.y + size};
                 int dist = distance(entity, e);
                 if (dist < min_dist)
@@ -1032,6 +1058,7 @@ Vec2Int MyStrategy::findClosestFreePosNearBuilding(Entity& entity, Entity& build
             if (mapOccupied[x][building.position.y - 1] == 0)
             {
                 Entity e;
+                e.entityType = EntityType::BUILDER_UNIT;
                 e.position = Vec2Int{x, building.position.y - 1};
                 int dist = distance(entity, e);
                 if (dist < min_dist)
