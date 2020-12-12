@@ -895,7 +895,7 @@ vector<Entity> MyStrategy::findFreePosOnBuildCellMap(vector<vector<int>>& map, E
     std::vector<Entity> positions;
     int mapSize = map[0].size();
     int limit = mapSize - entityProperties[type].size;
-    int step = entityProperties[type].size + 1;
+    int step = 1;
     for (auto entity : buildOrder)
         fillMapCells(map, entity.position, 1, entityProperties[entity.entityType].size, 1);
 
@@ -971,7 +971,7 @@ Vec2Int MyStrategy::findPosNearBuilding(Entity& entity, Entity& building)
 }
 
 
-Vec2Int findClosestFreePosNearBuilding(Entity& entity, Entity& building, vector<vector<int>>& mapOccupied)
+Vec2Int MyStrategy::indClosestFreePosNearBuilding(Entity& entity, Entity& building, vector<vector<int>>& mapOccupied)
 {
 
 }
