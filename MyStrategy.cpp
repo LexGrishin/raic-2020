@@ -62,24 +62,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     for (Entity entity : playerView.entities)
     {
         int entitySize = entityProperties[entity.entityType].size;
-        int value = 0;
-        if (entity.entityType == EntityType::RESOURCE)
-            value = 1;
-        else if ((entity.entityType == EntityType::BUILDER_UNIT)
-                 ||(entity.entityType == EntityType::RANGED_UNIT)
-                 ||(entity.entityType == EntityType::MELEE_UNIT)
-                )
-            value = 2;
-        else if ((entity.entityType == EntityType::BUILDER_BASE)
-            ||(entity.entityType == EntityType::RANGED_BASE)
-            ||(entity.entityType == EntityType::MELEE_BASE)
-            ||(entity.entityType == EntityType::HOUSE)
-            ||(entity.entityType == EntityType::WALL)
-            ||(entity.entityType == EntityType::TURRET))
-            value = 3;
-        else
-            value = 0;
-        fillMapCells(mapOccupied, entity.position, value, entitySize, 0);
+        fillMapCells(mapOccupied, entity.position, 1, entitySize, 0);
 
         if ((entity.entityType == EntityType::HOUSE)
             ||(entity.entityType == EntityType::BUILDER_BASE) 
@@ -179,12 +162,6 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         }
     }
 
-    // for (Entity res : resourses)
-    // {
-    //     if (isAvailable(mapOccupied, res.position, entityProperties[EntityType::RESOURCE].size))
-    //         availableResourses.emplace_back(res);
-    // }
-    //
     // Fill map of potential damage from enemy units.
     for (Entity ent: enemyEntities)
     {
@@ -291,21 +268,11 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         color = colors::red;
     else
         color = colors::green;
-    this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, Vec2Float(0, 0), colors::white), 
-                                                           "Builders: "+to_string(myBuilderUnits.size()), 
-                                                                         0, 20));
-    this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, Vec2Float(0, -20), colors::white), 
-                                                           "enemy builders: "+to_string(enemyBuilders.size()), 
-                                                                         0, 20));
+    
     this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, Vec2Float(0, -40), colors::white), 
                                                            "build order: "+to_string(buildOrder.size()), 
                                                                          0, 20));
-    this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, Vec2Float(0, -60), colors::white), 
-                                                           "my attack U: "+to_string(myAttackUnits.size()), 
-                                                                         0, 20));
-    this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, Vec2Float(0, -80), colors::white), 
-                                                           "enemy attack U: "+to_string(playerPopulation[2].inUse - enemyBuilders.size()), 
-                                                                         0, 20));
+    
     // this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, Vec2Float(0, -100), colors::white), 
     //                                                        "Available res: "+to_string(myAvailableResources), 
     //                                                                      0, 20));
@@ -906,7 +873,7 @@ EntityAction MyStrategy::chooseMeleeUnitAction(Entity& entity,
     return resultAction;
 }
 
-Entity MyStrategy::findNearestEntity(Entity& entity, std::vector<Entity>& entities, vector<vector<int>>& map, bool ignoreAvailable)
+Entity MyStrategy::findNearestEntity(Entity& entity, std::vector<Entity>& entities, vector<vector<int>>& mapOccupied, bool ignoreAvailable)
 {
     int min_dist = 100000;
     Entity nearestEntity;
@@ -914,7 +881,7 @@ Entity MyStrategy::findNearestEntity(Entity& entity, std::vector<Entity>& entiti
     for (Entity e : entities)
     {
         int d = distance(entity, e);
-        if ((d >= 0) && (d < min_dist) && (ignoreAvailable || d == 0 || isAvailable(map, e.position, entityProperties[e.entityType].size)))
+        if ((d >= 0) && (d < min_dist) && (ignoreAvailable || d == 0 || isAvailable(mapOccupied, e.position, entityProperties[e.entityType].size)))
         {
             min_dist = d;
             nearestEntity = e;
@@ -1002,6 +969,13 @@ Vec2Int MyStrategy::findPosNearBuilding(Entity& entity, Entity& building)
     }
     return result;
 }
+
+
+Vec2Int findClosestFreePosNearBuilding(Entity& entity, Entity& building, vector<vector<int>>& mapOccupied)
+{
+
+}
+
 // Entity MyStrategy::findNearestReachableResource(Entity& entity, std::unordered_map<int, Entity>& entities)
 // {
 //     int min_dist = 100000;
