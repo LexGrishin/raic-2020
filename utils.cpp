@@ -38,7 +38,6 @@ void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int entityTyp
     for (int i = x_start; i < x_finish; i++)
         for (int j = y_start; j < y_finish; j++)
         {
-            // std::cout<<"fillMapCells: "<<i<<", "<<j<<std::endl;
             map[i][j] = entityType;
         }
             
@@ -100,7 +99,7 @@ Vec2Int getRetreatPos(Vec2Int pos, std::vector<std::vector<int>>& mapDamage, std
     int rightDamage = 100000;
     int botDamage = 100000;
     int stayDamage = 0;
-    int radius = 3;
+    int radius = 5;
     Vec2Int posTop{pos.x, pos.y + 1};
     Vec2Int posBot{pos.x, pos.y - 1};
     Vec2Int posRight{pos.x + 1, pos.y};

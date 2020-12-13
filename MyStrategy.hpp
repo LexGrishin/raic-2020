@@ -75,6 +75,9 @@ public:
     void delDeadUnitsFromBuildOrder();
     Vec2Int findPosNearBuilding(Entity& entity, Entity& building);
     Vec2Int getNextStep(Entity entity, Entity target, std::vector<std::vector<int>>& mapOccupied);
+
+    std::vector<Entity> filterFreeResources(std::vector<Entity>& resourses, std::vector<std::vector<int>>& mapResourse);
+    Entity findNearestResourse(Entity& entity, std::vector<Entity>& entities);
     // Vec2Int findPosNearEntity
     // Entity findNearestReachableResource(Entity& entity, std::unordered_map<int, Entity>& entities);
     // EntityAction getAttackUnitAction(Entity& entity, 

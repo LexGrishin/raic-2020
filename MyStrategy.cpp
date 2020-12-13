@@ -31,6 +31,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     }
     
     vector<vector<int>> mapOccupied(playerView.mapSize, vector<int>(playerView.mapSize, 0));
+    vector<vector<int>> mapResourse(playerView.mapSize, vector<int>(playerView.mapSize, 0));
     // vector<vector<int>> mapVisited(playerView.mapSize, vector<int>(playerView.mapSize, 0));
     vector<vector<int>> mapBuilding(playerView.mapSize, vector<int>(playerView.mapSize, 0));
     vector<vector<int>> mapAttack(playerView.mapSize, vector<int>(playerView.mapSize, 0));
@@ -73,6 +74,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         if (entity.playerId == nullptr)
         {
             resourses.emplace_back(entity);
+            fillMapCells(mapResourse, entity.position, 1, entitySize, 0);
         }
         else if (*entity.playerId != playerView.myId)
         {
@@ -256,6 +258,8 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     // }
     // std::sort(myUnits.begin(), myUnits.end(), [](const Entity& lhs, const Entity& rhs) {return lhs.distToTarget < rhs.distToTarget;});
 
+    resourses = filterFreeResources(resourses, mapResourse);
+
     // int counter = 0;
     for (Entity entity : myUnits)
     {
@@ -346,16 +350,16 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, 
                                                                                                      Vec2Float(0, -120), color), 
                                                            "Balance: "+to_string(currentBalance)+" / "+to_string(tickBalance), 0, 20));
-    // cout<<"Res: "<<resourses.size()
-    //     <<" En U: "<<enemyEntities.size()
-    //     <<" My U: "<<myUnits.size()
-    //     <<" My T: "<<myTurrets.size()
-    //     <<" My B: "<<myBuildings.size()
-    //     <<" My D: "<<myDamagedBuildings.size()
-    //     <<" BO: "<<buildOrder.size()
-    //     <<" BU: "<<busyUnits.size()
-    //     <<" BS: "<<buildStage.size()
-    //     <<endl;
+    cout<<"Res: "<<resourses.size()
+        <<" En U: "<<enemyEntities.size()
+        <<" My U: "<<myUnits.size()
+        <<" My T: "<<myTurrets.size()
+        <<" My B: "<<myBuildings.size()
+        <<" My D: "<<myDamagedBuildings.size()
+        <<" BO: "<<buildOrder.size()
+        <<" BU: "<<busyUnits.size()
+        <<" BS: "<<buildStage.size()
+        <<endl;
 
     return Action(orders);
 }
@@ -493,7 +497,7 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
     resultAction.repairAction = nullptr;
     resultAction.moveAction = nullptr;
 
-    Entity nearestResource = findNearestEntity(entity, resourses);
+    Entity nearestResource = findNearestResourse(entity, resourses);
     Entity nearestDamagedBuilding = findNearestEntity(entity, myDamagedBuildings);
     int radius = 2;
     int stayDamage = countDamageSum(entity.position, radius, mapDamage);
@@ -815,7 +819,7 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
     
     if (entity.entityType == EntityType::BUILDER_BASE)
     {
-        if ((currentBalance < tickBalance) || (d_Resources < 0) || playerView.currentTick < 100)
+        if (((currentBalance < tickBalance) || (d_Resources < 0) || playerView.currentTick < 100) && (countBuilderUnits < 75))
         {
             Entity nearestResourse = findNearestEntity(entity, resourses);
             if (nearestResourse.id == -1)
@@ -840,7 +844,7 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
     }
     else if (entity.entityType == EntityType::RANGED_BASE)
     {
-        if ((currentBalance >= tickBalance))
+        if ((currentBalance >= tickBalance) || myAvailableResources > 200)
         {
             Entity nearestEnemy = findNearestEntity(entity, enemyEntities);
             if (nearestEnemy.id == -1)
@@ -1206,7 +1210,7 @@ Vec2Int MyStrategy::findClosestFreePosNearBuilding(Entity& entity, Entity& build
     int mapSize = mapOccupied[0].size();
     int min_dist = 100000;
     Vec2Int min_pos{-1, -1};
-    
+
     if (building.position.x > 0)
         for (int y = building.position.y; y < building.position.y + size; y++)
         {
@@ -1350,6 +1354,40 @@ Vec2Int MyStrategy::getNextStep(Entity entity, Entity target, vector<vector<int>
     mapOccupied[entity.position.x][entity.position.y] = 0;
     mapOccupied[step.x][step.y] = 1;
     return step;
+}
+
+vector<Entity> MyStrategy::filterFreeResources(vector<Entity>& resourses, vector<vector<int>>& mapResourse)
+{
+    vector<Entity> filteredRes;
+    for (Entity e: resourses)
+    {
+        if(isAvailable(mapResourse, e.position, 1))
+        {
+            filteredRes.emplace_back(e);
+        }
+    }
+    return filteredRes;
+}
+
+Entity MyStrategy::findNearestResourse(Entity& entity, std::vector<Entity>& entities)
+{
+    int min_dist = 100000;
+    int min_i = 0;
+    Entity nearestEntity;
+    nearestEntity.id = -1;
+    int n = entities.size();
+    for (int i = 0; i < n; i++)
+    {
+        int d = distance(entity, entities[i]);
+        if (d >= 0 && d < min_dist)
+        {
+            min_dist = d;
+            nearestEntity = entities[i];
+            min_i = i;
+        }
+    }
+    entities.erase(entities.begin() + min_i);
+    return nearestEntity;
 }
 
 // Entity MyStrategy::findNearestReachableResource(Entity& entity, std::unordered_map<int, Entity>& entities)
