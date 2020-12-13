@@ -615,7 +615,7 @@ void MyStrategy::delDeadUnitsFromBuildOrder()
 
 void MyStrategy::fillBuildOrder(vector<vector<int>>& mapBuilding, std::unordered_map<int, EntityAction>& orders, vector<vector<int>>& mapOccupied)
 {
-    if (buildOrder.size() < 3)
+    if (buildOrder.size() < 2)
     {
         if (myAvailablePopulation < 7 && myAvailableResources >= entityProperties[EntityType::HOUSE].initialCost)
         {
