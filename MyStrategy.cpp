@@ -627,7 +627,7 @@ void MyStrategy::fillBuildOrder(vector<vector<int>>& mapBuilding, std::unordered
                 busyUnits.emplace_back(builder);
                 buildOrder.emplace_back(house);
                 buildStage.emplace_back(1);
-                fillMapCells(mapOccupied, house.position, house.entityType, entityProperties[house.entityType].size, 1);
+                fillMapCells(mapBuilding, house.position, house.entityType, entityProperties[house.entityType].size, 1);
             }
         }
     }
@@ -758,7 +758,8 @@ EntityAction MyStrategy::chooseRangeUnitAction(Entity& entity,
     {
         if (distance(entity, nearestEnemy) >= myAttackRange + 2) // Враг далеко.
         {
-            if (countRangeUnits + countMeleeUnits > 2) // Если союзники рядом, то идем на врага.
+            int support = countUnitsInRadius(entity.position, 5, mapAlly);
+            if (support > 5) // Если союзники рядом, то идем на врага.
             {
                 MoveAction action;
                 action.target = nearestEnemy.position;
