@@ -11,6 +11,7 @@ namespace colors
   const Color red{1, 0, 0, 1};
   const Color green{0, 1, 0, 1};
   const Color white{1, 1, 1, 1};
+  const Color yellow{0.5, 0.5, 0, 1};
 }
 
 namespace debug

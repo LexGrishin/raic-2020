@@ -37,7 +37,11 @@ void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int entityTyp
 
     for (int i = x_start; i < x_finish; i++)
         for (int j = y_start; j < y_finish; j++)
+        {
+            // std::cout<<"fillMapCells: "<<i<<", "<<j<<std::endl;
             map[i][j] = entityType;
+        }
+            
 }
 void fillDamageMap(std::vector<std::vector<int>>& map, Vec2Int pos, int radius, int damage)
 {

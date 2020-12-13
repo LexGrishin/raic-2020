@@ -16,7 +16,6 @@ MyStrategy::MyStrategy() {}
 Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugInterface)
 {
     std::unordered_map<int, EntityAction> orders{};
-
     this->debugData.clear();
 
     if (isGlobalsSet == false)
@@ -32,6 +31,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     }
     
     vector<vector<int>> mapOccupied(playerView.mapSize, vector<int>(playerView.mapSize, 0));
+    // vector<vector<int>> mapVisited(playerView.mapSize, vector<int>(playerView.mapSize, 0));
     vector<vector<int>> mapBuilding(playerView.mapSize, vector<int>(playerView.mapSize, 0));
     vector<vector<int>> mapAttack(playerView.mapSize, vector<int>(playerView.mapSize, 0));
     vector<vector<int>> mapDamage(playerView.mapSize, vector<int>(playerView.mapSize, 0));
@@ -39,6 +39,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     vector<vector<int>> mapEnemy(playerView.mapSize, vector<int>(playerView.mapSize, -1));
 
     resourses.clear(); 
+    freeResourses.clear();
     enemyEntities.clear();
     myUnits.clear();
     myTurrets.clear();
@@ -50,12 +51,14 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     countRangeUnits = 0;
     potentialPopulation = 0;
 
+    // cout<<"Here: 2"<<endl;
 
     // Fill maps and unit arrays.
     for (Entity entity : playerView.entities)
     {
         int entitySize = entityProperties[entity.entityType].size;
         fillMapCells(mapOccupied, entity.position, 1, entitySize, 0);
+        // fillMapCells(mapVisited, entity.position, 1, entitySize, 0);
 
         if ((entity.entityType == EntityType::HOUSE)
             ||(entity.entityType == EntityType::BUILDER_BASE) 
@@ -125,18 +128,21 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
                     myDamagedBuildings.emplace_back(entity);
                 if (entity.active == true)
                     myBuildings.emplace_back(entity);
+                countBase += 1;
                 break;
             case EntityType::MELEE_BASE:
                 if (entity.health < entityProperties[entity.entityType].maxHealth)
                     myDamagedBuildings.emplace_back(entity);
                 if (entity.active == true)
                     myBuildings.emplace_back(entity);
+                countMeleBase += 1;
                 break;
             case EntityType::RANGED_BASE:
                 if (entity.health < entityProperties[entity.entityType].maxHealth)
                     myDamagedBuildings.emplace_back(entity);
                 if (entity.active == true)
                     myBuildings.emplace_back(entity);
+                countRangeBase += 1;
                 break;
             case EntityType::HOUSE:
                 if (entity.health < entityProperties[entity.entityType].maxHealth)
@@ -151,6 +157,9 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
             }
         }
     }
+
+
+    // cout<<"Here: 3"<<endl;
 
     // Fill map of potential damage from enemy units.
     for (Entity ent: enemyEntities)
@@ -184,6 +193,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         fillDamageMap(mapAttack, ent.position, radius, damage);
     }
 
+    // cout<<"Here: 4"<<endl;
     
     myAvailableResources = playersInfo[playerView.myId].resource;
     d_Resources = myAvailableResources - lastAvailableResources;
@@ -191,6 +201,8 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     myAvailablePopulation = playerPopulation[playerView.myId].available - playerPopulation[playerView.myId].inUse;
 
     delDeadUnitsFromBuildOrder();
+
+    // cout<<"Here: 5"<<endl;
     
     // Choose turns order.
     // int n = myUnits.size();
@@ -262,7 +274,9 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         // counter++;
     }
 
-    Entity nearestEnemyToBase = findNearestEntity(baseCenter, enemyEntities, mapOccupied, true);
+    // cout<<"Here: 6"<<endl;
+
+    Entity nearestEnemyToBase = findNearestEntity(baseCenter, enemyEntities);
     int enemyDistToBase = 100000;
     if (nearestEnemyToBase.id != -1)
         enemyDistToBase = distance(baseCenter, nearestEnemyToBase);
@@ -272,6 +286,8 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         EntityAction action = chooseRecruitUnitAction(entity, playerView, enemyDistToBase, mapOccupied);
         orders[entity.id] = action;
     }
+
+    // cout<<"Here: 7"<<endl;
 
     for (Entity entity : myTurrets)
     {
@@ -293,32 +309,30 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         orders[entity.id] = action;
     }
 
-    fillBuildOrder(mapBuilding, orders, mapOccupied);
+    fillBuildOrder(mapBuilding, orders);
 
-    // for (int i=0; i < mapDamage[0].size(); i++)
-    //     for (int j=0; j < mapDamage[0].size(); j++)
-    //     {
-    //         if (mapDamage[i][j] != 0)
-    //         {
-    //             this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(std::make_shared<Vec2Float>(i, j), 
-    //                                                                      Vec2Float(0, 0), colors::red), 
-    //                                                                      to_string(mapDamage[i][j]), 
-    //                                                                      0, 10));
-    //         }
-    //     }
+    for (int i=0; i < mapBuilding[0].size(); i++)
+        for (int j=0; j < mapBuilding[0].size(); j++)
+        {
+            if (mapBuilding[i][j] != 0)
+            {
+                this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(std::make_shared<Vec2Float>(i, j), 
+                                                                         Vec2Float(0, 0), colors::red), 
+                                                                         to_string(mapBuilding[i][j]), 
+                                                                         0, 10));
+            }
+        }
 
     float tickBalance = unitBalance(playerView.currentTick);
     float currentBalance = float(countBuilderUnits)/(float(countRangeUnits + countMeleeUnits + countBuilderUnits) + 0.000001);
+
+    // cout<<"Here: 8"<<endl;
 
     Color color;
     if (currentBalance < tickBalance)
         color = colors::red;
     else
         color = colors::green;
-    
-    this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, Vec2Float(0, -40), colors::white), 
-                                                           "build order: "+to_string(buildOrder.size()), 
-                                                                         0, 20));
     
     // this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, Vec2Float(0, -100), colors::white), 
     //                                                        "Available res: "+to_string(myAvailableResources), 
@@ -332,6 +346,17 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(debug::info_pos, 
                                                                                                      Vec2Float(0, -120), color), 
                                                            "Balance: "+to_string(currentBalance)+" / "+to_string(tickBalance), 0, 20));
+    // cout<<"Res: "<<resourses.size()
+    //     <<" En U: "<<enemyEntities.size()
+    //     <<" My U: "<<myUnits.size()
+    //     <<" My T: "<<myTurrets.size()
+    //     <<" My B: "<<myBuildings.size()
+    //     <<" My D: "<<myDamagedBuildings.size()
+    //     <<" BO: "<<buildOrder.size()
+    //     <<" BU: "<<busyUnits.size()
+    //     <<" BS: "<<buildStage.size()
+    //     <<endl;
+
     return Action(orders);
 }
 
@@ -369,6 +394,13 @@ void MyStrategy::setGlobals(const PlayerView& playerView)
             remontPoint.position.y = playerView.mapSize / 4;
             baseCenter.position.x = playerView.mapSize / 10;
             baseCenter.position.y = playerView.mapSize / 10;
+
+            enemyCenter1.position.x = playerView.mapSize - playerView.mapSize / 10;
+            enemyCenter1.position.y = playerView.mapSize - playerView.mapSize / 10;
+            enemyCenter2.position.x = playerView.mapSize / 10;
+            enemyCenter2.position.y = playerView.mapSize - playerView.mapSize / 10;
+            enemyCenter3.position.x = playerView.mapSize - playerView.mapSize / 10;
+            enemyCenter3.position.y = playerView.mapSize / 10;
             break;
         }
         else if ((entity.position.x > half) && (entity.position.y < half))
@@ -377,6 +409,13 @@ void MyStrategy::setGlobals(const PlayerView& playerView)
             remontPoint.position.y = playerView.mapSize / 4;
             baseCenter.position.x = playerView.mapSize - playerView.mapSize / 10;
             baseCenter.position.y = playerView.mapSize / 10;
+
+            enemyCenter1.position.x = playerView.mapSize / 10;
+            enemyCenter1.position.y = playerView.mapSize - playerView.mapSize / 10;
+            enemyCenter2.position.x = playerView.mapSize / 10;
+            enemyCenter2.position.y = playerView.mapSize / 10;
+            enemyCenter3.position.x = playerView.mapSize - playerView.mapSize / 10;
+            enemyCenter3.position.y = playerView.mapSize - playerView.mapSize / 10;
             break;
         }
         else if ((entity.position.x < half) && (entity.position.y > half))
@@ -385,6 +424,13 @@ void MyStrategy::setGlobals(const PlayerView& playerView)
             remontPoint.position.y = playerView.mapSize - playerView.mapSize / 4;
             baseCenter.position.x = playerView.mapSize / 10;
             baseCenter.position.y = playerView.mapSize - playerView.mapSize / 10;
+
+            enemyCenter1.position.x = playerView.mapSize - playerView.mapSize / 10;
+            enemyCenter1.position.y = playerView.mapSize / 10;
+            enemyCenter2.position.x = playerView.mapSize / 10;
+            enemyCenter2.position.y = playerView.mapSize / 10;
+            enemyCenter3.position.x = playerView.mapSize - playerView.mapSize / 10;
+            enemyCenter3.position.y = playerView.mapSize - playerView.mapSize / 10;
             break;
         }
         else
@@ -393,6 +439,13 @@ void MyStrategy::setGlobals(const PlayerView& playerView)
             remontPoint.position.y = playerView.mapSize - playerView.mapSize / 4;
             baseCenter.position.x = playerView.mapSize - playerView.mapSize / 10;
             baseCenter.position.y = playerView.mapSize - playerView.mapSize / 10;
+
+            enemyCenter1.position.x = playerView.mapSize / 10;
+            enemyCenter1.position.y = playerView.mapSize / 10;
+            enemyCenter2.position.x = playerView.mapSize - playerView.mapSize / 10;
+            enemyCenter2.position.y = playerView.mapSize / 10;
+            enemyCenter3.position.x = playerView.mapSize / 10;
+            enemyCenter3.position.y = playerView.mapSize - playerView.mapSize / 10;
             break;
         } 
     }
@@ -440,9 +493,9 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
     resultAction.repairAction = nullptr;
     resultAction.moveAction = nullptr;
 
-    Entity nearestResource = findNearestEntity(entity, resourses, mapOccupied, false);
-    Entity nearestDamagedBuilding = findNearestEntity(entity, myDamagedBuildings, mapOccupied, false);
-    int radius = 1;
+    Entity nearestResource = findNearestEntity(entity, resourses);
+    Entity nearestDamagedBuilding = findNearestEntity(entity, myDamagedBuildings);
+    int radius = 2;
     int stayDamage = countDamageSum(entity.position, radius, mapDamage);
 
     int orderLength = buildOrder.size();
@@ -488,10 +541,10 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
                 action.findClosestPosition = true;
                 resultAction.moveAction = std::make_shared<MoveAction>(action);
 
-                // ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::white};
-                // ColoredVertex B{std::make_shared<Vec2Float>(nearestDamagedBuilding.position.x, nearestDamagedBuilding.position.y), {0, 0}, colors::white};
-                // std::vector<ColoredVertex> line{A, B};
-                // this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+                ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::green};
+                ColoredVertex B{std::make_shared<Vec2Float>(nearestDamagedBuilding.position.x, nearestDamagedBuilding.position.y), {0, 0}, colors::green};
+                std::vector<ColoredVertex> line{A, B};
+                this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
             }
             else if (nearestResource.id != -1) // Иначе идем добывать ресурсы.
             {
@@ -504,6 +557,10 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
                     action.breakThrough = false;
                     action.findClosestPosition = true;
                     resultAction.moveAction = std::make_shared<MoveAction>(action);
+                    ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::white};
+                    ColoredVertex B{std::make_shared<Vec2Float>(action.target.x, action.target.y), {0, 0}, colors::white};
+                    std::vector<ColoredVertex> line{A, B};
+                    this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
                 }
                 else
                 {
@@ -514,7 +571,30 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
             } 
             else // Если нет ресурсов поблизости
             {
-
+                if (entity.id % 3 == 1)
+                {
+                    MoveAction action;
+                    action.target = enemyCenter1.position;
+                    action.breakThrough = true;
+                    action.findClosestPosition = true;
+                    resultAction.moveAction = std::make_shared<MoveAction>(action);
+                }
+                else if (entity.id % 3 == 2)
+                {
+                    MoveAction action;
+                    action.target = enemyCenter2.position;
+                    action.breakThrough = true;
+                    action.findClosestPosition = true;
+                    resultAction.moveAction = std::make_shared<MoveAction>(action);
+                }
+                else
+                {
+                    MoveAction action;
+                    action.target = enemyCenter3.position;
+                    action.breakThrough = true;
+                    action.findClosestPosition = true;
+                    resultAction.moveAction = std::make_shared<MoveAction>(action);
+                }
             }
         }
         else // Если мы рядом, то чиним.
@@ -532,21 +612,21 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
         if (dist != 0) 
         {
             MoveAction action;
-            // Vec2Int nextStep = getNextStep(entity, target, mapOccupied);
-            // action.target = nextStep;
             Vec2Int buildPos = findClosestFreePosNearBuilding(entity, target, mapOccupied);
             action.target = buildPos;
+            // Vec2Int nextStep = getNextStep(entity, target, mapOccupied);
+            // action.target = nextStep;
             action.breakThrough = false;
             action.findClosestPosition = true;
             resultAction.moveAction = std::make_shared<MoveAction>(action);
             buildStage[orderId] = 1;
 
-            ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::white};
-            ColoredVertex B{std::make_shared<Vec2Float>(action.target.x, action.target.y), {0, 0}, colors::white};
+            ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::yellow};
+            ColoredVertex B{std::make_shared<Vec2Float>(action.target.x, action.target.y), {0, 0}, colors::yellow};
             std::vector<ColoredVertex> line{A, B};
             this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
         }
-        else if (buildStage[orderId] == 1) 
+        else //if (buildStage[orderId] == 1) 
         {
             BuildAction action;
             action.entityType = target.entityType;
@@ -572,6 +652,10 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
             action.breakThrough = false;
             action.findClosestPosition = true;
             resultAction.moveAction = std::make_shared<MoveAction>(action);
+            ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::white};
+            ColoredVertex B{std::make_shared<Vec2Float>(action.target.x, action.target.y), {0, 0}, colors::white};
+            std::vector<ColoredVertex> line{A, B};
+            this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
         }
         else
         {
@@ -582,6 +666,30 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
     } 
     else // Если нет ресурсов поблизости
     {
+        if (entity.id % 3 == 1)
+        {
+            MoveAction action;
+            action.target = enemyCenter1.position;
+            action.breakThrough = true;
+            action.findClosestPosition = true;
+            resultAction.moveAction = std::make_shared<MoveAction>(action);
+        }
+        else if (entity.id % 3 == 2)
+        {
+            MoveAction action;
+            action.target = enemyCenter2.position;
+            action.breakThrough = true;
+            action.findClosestPosition = true;
+            resultAction.moveAction = std::make_shared<MoveAction>(action);
+        }
+        else
+        {
+            MoveAction action;
+            action.target = enemyCenter3.position;
+            action.breakThrough = true;
+            action.findClosestPosition = true;
+            resultAction.moveAction = std::make_shared<MoveAction>(action);
+        }
     }
     return resultAction;
 }
@@ -613,21 +721,56 @@ void MyStrategy::delDeadUnitsFromBuildOrder()
     buildStage = newBuildStage;
 }
 
-void MyStrategy::fillBuildOrder(vector<vector<int>>& mapBuilding, std::unordered_map<int, EntityAction>& orders, vector<vector<int>>& mapOccupied)
+void MyStrategy::fillBuildOrder(vector<vector<int>>& mapBuilding, std::unordered_map<int, EntityAction>& orders)
 {
-    if (buildOrder.size() < 2)
+    if (buildOrder.size() < 1)
     {
-        if (myAvailablePopulation < 7 && myAvailableResources >= entityProperties[EntityType::HOUSE].initialCost)
+        if (countBase == 0 && myAvailableResources >= entityProperties[EntityType::BUILDER_BASE].initialCost)
+        {
+            vector<Entity> possibleBuildPositions = findFreePosOnBuildCellMap(mapBuilding, EntityType::BUILDER_BASE);
+            Entity builder = findNearestFreeBuilder(baseCenter, orders);
+            if (builder.id != -1 && possibleBuildPositions.size() > 0)
+            {
+                Entity base = findNearestEntity(builder, possibleBuildPositions);
+                if (base.id != -1)
+                {
+                    busyUnits.emplace_back(builder);
+                    buildOrder.emplace_back(base);
+                    buildStage.emplace_back(1);
+                    fillMapCells(mapBuilding, base.position, 1, entityProperties[EntityType::BUILDER_BASE].size, 1);
+                }
+            }
+        }
+        else if (countRangeBase < 2 && myAvailableResources >= entityProperties[EntityType::RANGED_BASE].initialCost)
+        {
+            vector<Entity> possibleBuildPositions = findFreePosOnBuildCellMap(mapBuilding, EntityType::RANGED_BASE);
+            Entity builder = findNearestFreeBuilder(baseCenter, orders);
+            if (builder.id != -1 && possibleBuildPositions.size() > 0)
+            {
+                Entity base = findNearestEntity(builder, possibleBuildPositions);
+                if (base.id != -1)
+                {
+                    busyUnits.emplace_back(builder);
+                    buildOrder.emplace_back(base);
+                    buildStage.emplace_back(1);
+                    fillMapCells(mapBuilding, base.position, 1, entityProperties[EntityType::RANGED_BASE].size, 1);
+                }
+            }
+        }
+        else if (myAvailablePopulation < 7 && myAvailableResources >= entityProperties[EntityType::HOUSE].initialCost)
         {
             vector<Entity> possibleBuildPositions = findFreePosOnBuildCellMap(mapBuilding, EntityType::HOUSE);
             Entity builder = findNearestFreeBuilder(baseCenter, orders);
             if (builder.id != -1 && possibleBuildPositions.size() > 0)
             {
-                Entity house = findNearestEntity(builder, possibleBuildPositions, mapBuilding, true);
-                busyUnits.emplace_back(builder);
-                buildOrder.emplace_back(house);
-                buildStage.emplace_back(1);
-                fillMapCells(mapBuilding, house.position, house.entityType, entityProperties[house.entityType].size, 1);
+                Entity house = findNearestEntity(builder, possibleBuildPositions);
+                if (house.id != -1)
+                {
+                    busyUnits.emplace_back(builder);
+                    buildOrder.emplace_back(house);
+                    buildStage.emplace_back(1);
+                    fillMapCells(mapBuilding, house.position, 1, entityProperties[EntityType::HOUSE].size, 1);
+                }
             }
         }
     }
@@ -669,14 +812,18 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
     float currentBalance = float(countBuilderUnits)/(float(countRangeUnits + countMeleeUnits + countBuilderUnits) + 0.000001);
     int halfMapSize = mapOccupied[0].size()/2;
     Vec2Int default_pos{halfMapSize, halfMapSize};
-
+    
     if (entity.entityType == EntityType::BUILDER_BASE)
     {
-        if ((currentBalance < tickBalance) || (myAvailableResources - lastAvailableResources < -60))
+        if ((currentBalance < tickBalance) || (d_Resources < 0) || playerView.currentTick < 100)
         {
-            Entity nearestResourse = findNearestEntity(entity, resourses, mapOccupied, true);
+            Entity nearestResourse = findNearestEntity(entity, resourses);
             if (nearestResourse.id == -1)
+            {
                 nearestResourse.position = default_pos;
+                nearestResourse.entityType = EntityType::RESOURCE;
+            }
+                
             Vec2Int recruit_pos = findClosestFreePosNearBuilding(nearestResourse, entity, mapOccupied);
             
             if (recruit_pos.x >= 0)
@@ -695,9 +842,12 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
     {
         if ((currentBalance >= tickBalance))
         {
-            Entity nearestEnemy = findNearestEntity(entity, enemyEntities, mapOccupied, true);
+            Entity nearestEnemy = findNearestEntity(entity, enemyEntities);
             if (nearestEnemy.id == -1)
+            {
                 nearestEnemy.position = default_pos;
+                nearestEnemy.entityType = EntityType::RANGED_UNIT;
+            }
             Vec2Int recruit_pos = findClosestFreePosNearBuilding(nearestEnemy, entity, mapOccupied);
             if (recruit_pos.x >= 0)
             {
@@ -715,9 +865,12 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
     {
         if (enemyDistToBase < 30)
         {
-            Entity nearestEnemy = findNearestEntity(entity, enemyEntities, mapOccupied, true);
+            Entity nearestEnemy = findNearestEntity(entity, enemyEntities);
             if (nearestEnemy.id == -1)
+            {
                 nearestEnemy.position = default_pos;
+                nearestEnemy.entityType = EntityType::RANGED_UNIT;
+            }
             Vec2Int recruit_pos = findClosestFreePosNearBuilding(nearestEnemy, entity, mapOccupied);
             if (recruit_pos.x >= 0)
             {
@@ -748,7 +901,7 @@ EntityAction MyStrategy::chooseRangeUnitAction(Entity& entity,
     resultAction.buildAction = nullptr;
     resultAction.repairAction = nullptr;
     
-    Entity nearestEnemy = findNearestEntity(entity, enemyEntities, mapOccupied, true);
+    Entity nearestEnemy = findNearestEntity(entity, enemyEntities);
 
     int myAttackRange = (*entityProperties[entity.entityType].attack).attackRange;
     int nearbyEnemys = countUnitsInRadius(entity.position, 7, mapEnemy);
@@ -758,8 +911,7 @@ EntityAction MyStrategy::chooseRangeUnitAction(Entity& entity,
     {
         if (distance(entity, nearestEnemy) >= myAttackRange + 2) // Враг далеко.
         {
-            int support = countUnitsInRadius(entity.position, 5, mapAlly);
-            if (support > 5) // Если союзники рядом, то идем на врага.
+            if (countRangeUnits + countMeleeUnits > 5) // Если союзники рядом, то идем на врага.
             {
                 MoveAction action;
                 action.target = nearestEnemy.position;
@@ -872,20 +1024,30 @@ EntityAction MyStrategy::chooseRangeUnitAction(Entity& entity,
     }
     else // Враг не обнаружен.
     {
-        AttackAction action;
-        AutoAttack autoAttack;
-        autoAttack.pathfindRange = 160;
-        autoAttack.validTargets = {EntityType::RANGED_UNIT,
-                                EntityType::MELEE_UNIT,
-                                EntityType::TURRET,
-                                EntityType::BUILDER_UNIT,
-                                EntityType::RANGED_BASE,
-                                EntityType::MELEE_BASE,
-                                EntityType::BUILDER_BASE,
-                                EntityType::HOUSE
-                                };
-        action.autoAttack = std::make_shared<AutoAttack>(autoAttack);
-        resultAction.attackAction = std::make_shared<AttackAction>(action);
+        if (entity.id % 3 == 1)
+        {
+            MoveAction action;
+            action.target = enemyCenter1.position;
+            action.breakThrough = true;
+            action.findClosestPosition = true;
+            resultAction.moveAction = std::make_shared<MoveAction>(action);
+        }
+        else if (entity.id % 3 == 2)
+        {
+            MoveAction action;
+            action.target = enemyCenter2.position;
+            action.breakThrough = true;
+            action.findClosestPosition = true;
+            resultAction.moveAction = std::make_shared<MoveAction>(action);
+        }
+        else
+        {
+            MoveAction action;
+            action.target = enemyCenter3.position;
+            action.breakThrough = true;
+            action.findClosestPosition = true;
+            resultAction.moveAction = std::make_shared<MoveAction>(action);
+        }
     }
     return resultAction;
 }
@@ -902,7 +1064,7 @@ EntityAction MyStrategy::chooseMeleeUnitAction(Entity& entity,
     resultAction.buildAction = nullptr;
     resultAction.repairAction = nullptr;
     
-    Entity nearestEnemy = findNearestEntity(entity, enemyEntities, mapOccupied, false);
+    Entity nearestEnemy = findNearestEntity(entity, enemyEntities);
 
     if (nearestEnemy.id != -1) // Враг обнаружен.
     {
@@ -936,7 +1098,7 @@ EntityAction MyStrategy::chooseMeleeUnitAction(Entity& entity,
     return resultAction;
 }
 
-Entity MyStrategy::findNearestEntity(Entity& entity, std::vector<Entity>& entities, vector<vector<int>>& mapOccupied, bool ignoreAvailable)
+Entity MyStrategy::findNearestEntity(Entity& entity, std::vector<Entity>& entities)
 {
     int min_dist = 100000;
     Entity nearestEntity;
@@ -944,7 +1106,7 @@ Entity MyStrategy::findNearestEntity(Entity& entity, std::vector<Entity>& entiti
     for (Entity e : entities)
     {
         int d = distance(entity, e);
-        if ((d >= 0) && (d < min_dist) && (ignoreAvailable || d == 0 || isAvailable(mapOccupied, e.position, entityProperties[e.entityType].size)))
+        if (d >= 0 && d < min_dist)
         {
             min_dist = d;
             nearestEntity = e;
@@ -969,21 +1131,26 @@ vector<Entity> MyStrategy::findFreePosOnBuildCellMap(vector<vector<int>>& map, E
             for (int n = i; n < i + entityProperties[type].size; n++)
             {
                 for (int m = j; m < j + entityProperties[type].size; m++)
+                {
+                    // std::cout<<"freePosToBuild: "<<n<<", "<<m<<std::endl;
                     if (map[n][m] != 0)
                     {
                         freeArea = false;
                         break;
                     }
+                }
+                    
                 if (freeArea == false)
                     break;
             }
             if (freeArea == true)
             {
                 Vec2Int pos{i, j};
-                Entity position;
-                position.position = pos;
-                position.entityType = type;
-                positions.emplace_back(position);
+                Entity ent;
+                ent.id = 1;
+                ent.position = pos;
+                ent.entityType = type;
+                positions.emplace_back(ent);
             } 
         }
     return positions;
@@ -1039,9 +1206,7 @@ Vec2Int MyStrategy::findClosestFreePosNearBuilding(Entity& entity, Entity& build
     int mapSize = mapOccupied[0].size();
     int min_dist = 100000;
     Vec2Int min_pos{-1, -1};
-
-    int x_left;
-
+    
     if (building.position.x > 0)
         for (int y = building.position.y; y < building.position.y + size; y++)
         {
@@ -1127,7 +1292,7 @@ Vec2Int MyStrategy::getNextStep(Entity entity, Entity target, vector<vector<int>
     int botDist = 100000;
     int leftDist = 100000;
     int rightDist = 100000;
-    int stayDist = distance(entity, destenation);
+    int stayDist = 100000; //distance(entity, destenation);
     if (posTop.y < mapSize)
         if (mapOccupied[posTop.x][posTop.y] == 0)
         {
