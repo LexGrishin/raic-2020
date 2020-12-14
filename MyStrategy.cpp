@@ -14,9 +14,10 @@ MyStrategy::MyStrategy() {}
 
 Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugInterface)
 {
-    std::unordered_map<int, EntityAction> orders{};
     this->debugData.clear();
 
+    std::unordered_map<int, EntityAction> orders{};
+    
     if (isGlobalsSet == false)
         setGlobals(playerView);
 
@@ -29,13 +30,10 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         playerPopulation[player.id] = population;
     }
     
-    std::vector<std::vector<int>> mapOccupied(playerView.mapSize, std::vector<int>(playerView.mapSize, 0));
-    std::vector<std::vector<int>> mapResourse(playerView.mapSize, std::vector<int>(playerView.mapSize, 0));
-    std::vector<std::vector<int>> mapBuilding(playerView.mapSize, std::vector<int>(playerView.mapSize, 0));
-    std::vector<std::vector<int>> mapAttack(playerView.mapSize, std::vector<int>(playerView.mapSize, 0));
+    std::vector<std::vector<int>> mapOccupied(playerView.mapSize, std::vector<int>(playerView.mapSize, 0)); // Все сущности. 1 - клетка занята, 0 - клетка свободна.
+    std::vector<std::vector<int>> mapBuilding(playerView.mapSize, std::vector<int>(playerView.mapSize, 0)); // Только постройки и ресурсы. 1 - клетка занята, 0 - клетка свободна. Заполняется с паддингом 1.
+    std::vector<std::vector<int>> mapAttack(playerView.mapSize, std::vector<int>(playerView.mapSize, 0)); // Суммарный дамаг по клетке.
     std::vector<std::vector<int>> mapDamage(playerView.mapSize, std::vector<int>(playerView.mapSize, 0));
-    std::vector<std::vector<int>> mapAlly(playerView.mapSize, std::vector<int>(playerView.mapSize, -1));
-    std::vector<std::vector<int>> mapEnemy(playerView.mapSize, std::vector<int>(playerView.mapSize, -1));
 
     resourses.clear(); 
     enemyEntities.clear();
@@ -47,15 +45,11 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     countBuilderUnits = 0;
     countMeleeUnits = 0;
     countRangeUnits = 0;
-    potentialPopulation = 0;
-
-    cout<<"Here: 2"<<endl;
 
     // Fill maps and unit arrays.
     for (Entity entity : playerView.entities)
     {
-        int entitySize = entityProperties[entity.entityType].size;
-        fillMapCells(mapOccupied, entity.position, 1, entitySize, 0);
+        fillMapCells(mapOccupied, entity.position, 1, entity.getSize(), 0);
 
         if ((entity.entityType == EntityType::HOUSE)
             ||(entity.entityType == EntityType::BUILDER_BASE) 
@@ -65,35 +59,27 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
             ||(entity.entityType == EntityType::RESOURCE)
             ||(entity.entityType == EntityType::WALL)
            )
-           fillMapCells(mapBuilding, entity.position, 1, entitySize, 1);
+           fillMapCells(mapBuilding, entity.position, 1, entity.getSize(), 1);
         
         if (entity.playerId == nullptr)
         {
             resourses.emplace_back(entity);
-            fillMapCells(mapResourse, entity.position, 1, entitySize, 0);
         }
         else if (*entity.playerId != playerView.myId)
         {
             if (entity.active)
             {
-                playerPopulation[*entity.playerId].available += entityProperties[entity.entityType].populationProvide;
-                playerPopulation[*entity.playerId].inUse += entityProperties[entity.entityType].populationUse;
+                playerPopulation[*entity.playerId].available += entity.populationProvide();
+                playerPopulation[*entity.playerId].inUse += entity.populationUse();
             }
             enemyEntities.emplace_back(entity);
-            if ((entity.entityType == EntityType::RANGED_UNIT)
-                ||(entity.entityType == EntityType::MELEE_UNIT))
-                fillMapCells(mapEnemy, entity.position, entity.id, 1, 0);
         }
         else
         {
             if (entity.active)
             {
-                playerPopulation[*entity.playerId].available += entityProperties[entity.entityType].populationProvide;
-                playerPopulation[*entity.playerId].inUse += entityProperties[entity.entityType].populationUse;
-            }
-            else
-            {
-                potentialPopulation += entityProperties[entity.entityType].populationProvide;
+                playerPopulation[*entity.playerId].available += entity.populationProvide();
+                playerPopulation[*entity.playerId].inUse += entity.populationUse();
             }
             
             switch (entity.entityType)
@@ -104,61 +90,42 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
                 break;
             case EntityType::RANGED_UNIT:
                 myUnits.emplace_back(entity);
-                fillMapCells(mapAlly, entity.position, entity.id, 1, 0);
                 countRangeUnits += 1;
                 break;
             case EntityType::MELEE_UNIT:
                 myUnits.emplace_back(entity);
-                fillMapCells(mapAlly, entity.position, entity.id, 1, 0);
                 countMeleeUnits += 1;
                 break;
             case EntityType::TURRET:
-                if (entity.health < entityProperties[entity.entityType].maxHealth)
-                    myDamagedBuildings.emplace_back(entity);
-                if (entity.active == true)
-                {
-                    myTurrets.emplace_back(entity);
-                    fillMapCells(mapAlly, entity.position, entity.id, 1, 0);
-                }
+                if (entity.health < entity.maxHealth()) myDamagedBuildings.emplace_back(entity);
+                if (entity.active == true) myTurrets.emplace_back(entity);
                 break;
             case EntityType::BUILDER_BASE:
-                if (entity.health < entityProperties[entity.entityType].maxHealth)
-                    myDamagedBuildings.emplace_back(entity);
-                if (entity.active == true)
-                    myBuildings.emplace_back(entity);
+                if (entity.health < entity.maxHealth()) myDamagedBuildings.emplace_back(entity);
+                if (entity.active == true) myBuildings.emplace_back(entity);
                 countBase += 1;
                 break;
             case EntityType::MELEE_BASE:
-                if (entity.health < entityProperties[entity.entityType].maxHealth)
-                    myDamagedBuildings.emplace_back(entity);
-                if (entity.active == true)
-                    myBuildings.emplace_back(entity);
+                if (entity.health < entity.maxHealth()) myDamagedBuildings.emplace_back(entity);
+                if (entity.active == true) myBuildings.emplace_back(entity);
                 countMeleBase += 1;
                 break;
             case EntityType::RANGED_BASE:
-                if (entity.health < entityProperties[entity.entityType].maxHealth)
-                    myDamagedBuildings.emplace_back(entity);
-                if (entity.active == true)
-                    myBuildings.emplace_back(entity);
+                if (entity.health < entity.maxHealth()) myDamagedBuildings.emplace_back(entity);
+                if (entity.active == true) myBuildings.emplace_back(entity);
                 countRangeBase += 1;
                 break;
             case EntityType::HOUSE:
-                if (entity.health < entityProperties[entity.entityType].maxHealth)
-                    myDamagedBuildings.emplace_back(entity);
+                if (entity.health < entity.maxHealth()) myDamagedBuildings.emplace_back(entity);
                 break;
             case EntityType::WALL:
-                if (entity.health < entityProperties[entity.entityType].maxHealth)
-                    myDamagedBuildings.emplace_back(entity);
+                if (entity.health < entity.maxHealth()) myDamagedBuildings.emplace_back(entity);
                 break;
             default:
                 break;
             }
         }
     }
-
-
-    cout<<"Here: 3"<<endl;
-
     // Fill map of potential damage from enemy units.
     for (Entity ent: enemyEntities)
     {
@@ -167,32 +134,23 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
             || (ent.entityType == EntityType::TURRET)
             || (ent.entityType == EntityType::BUILDER_UNIT))
         {
-            int radius = (*entityProperties[ent.entityType].attack).attackRange;
-            int damage = (*entityProperties[ent.entityType].attack).damage;
-            fillDamageMap(mapDamage, ent.position, radius, damage);
+            fillDamageMap(mapDamage, ent.position, ent.attackRange(), ent.damage());  // TODO: Для турели атака заполняется неправильно!
         }
     }
-    
     // Fill map of potential attack from ally units.
     for (Entity ent: myUnits)
     {
-        if (ent.entityType == EntityType::RANGED_UNIT || ent.entityType == EntityType::MELEE_UNIT)
+        if (ent.entityType == EntityType::RANGED_UNIT 
+           || ent.entityType == EntityType::MELEE_UNIT)
         {
-            int radius = (*entityProperties[ent.entityType].attack).attackRange;
-            int damage = (*entityProperties[ent.entityType].attack).damage;
-            fillDamageMap(mapAttack, ent.position, radius, damage);
+            fillDamageMap(mapAttack, ent.position, ent.attackRange(), ent.damage()); 
         }
     }
-    
     for (Entity ent: myTurrets) // TODO: Исправить расчет поля атаки турели с учетом ее размера!
     {
-        int radius = (*entityProperties[ent.entityType].attack).attackRange;
-        int damage = (*entityProperties[ent.entityType].attack).damage;
-        fillDamageMap(mapAttack, ent.position, radius, damage);
+        fillDamageMap(mapAttack, ent.position, ent.attackRange(), ent.damage());  // TODO: Для турели атака заполняется неправильно!
     }
-
-    cout<<"Here: 4"<<endl;
-    
+  
     myAvailableResources = playersInfo[playerView.myId].resource;
     d_Resources = myAvailableResources - lastAvailableResources;
     lastAvailableResources = myAvailableResources;

@@ -21,8 +21,6 @@ public:
     int countRangeUnits = 0;
     int countMeleeUnits = 0;
     int countBuilderUnits = 0;
-    
-    int potentialPopulation;
 
     int countBase = 0;
     int countRangeBase = 0;
@@ -41,7 +39,6 @@ public:
                         myBuildings, 
                         myDamagedBuildings;
 
-    std::unordered_map<EntityType, EntityProperties> entityProperties;
     std::vector<Entity> busyUnits;
     std::vector<Entity> buildOrder;
 

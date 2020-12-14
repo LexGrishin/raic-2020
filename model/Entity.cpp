@@ -161,3 +161,157 @@ int Entity::getSize()
     }
     return size;
 }
+
+int Entity::populationProvide()
+{
+    int provide = 0;
+    if (entityType == EntityType::BUILDER_BASE 
+        || entityType == EntityType::RANGED_BASE
+        || entityType == EntityType::MELEE_BASE
+        || entityType == EntityType::HOUSE)
+    {
+        provide = 5;
+    }
+    else 
+    {
+        provide = 0;
+    }
+    return provide;
+}
+
+int Entity::populationUse()
+{
+    int use = 1;
+    if (entityType == EntityType::BUILDER_BASE 
+        || entityType == EntityType::RANGED_BASE
+        || entityType == EntityType::MELEE_BASE
+        || entityType == EntityType::HOUSE
+        || entityType == EntityType::TURRET
+        || entityType == EntityType::WALL
+        || entityType == EntityType::RESOURCE)
+    {
+        use = 0;
+    }
+    else 
+    {
+        use = 1;
+    }
+    return use;
+}
+
+int Entity::maxHealth()
+{
+    int health = 0;
+    switch (entityType)
+    {
+        case EntityType::BUILDER_BASE:
+            health = 300;
+            break;
+        case EntityType::MELEE_BASE:
+            health = 300;
+            break;
+        case EntityType::RANGED_BASE:
+            health = 300;
+            break;
+        case EntityType::BUILDER_UNIT:
+            health = 10;
+            break;
+        case EntityType::RANGED_UNIT:
+            health = 10;
+            break;
+        case EntityType::MELEE_UNIT:
+            health = 50;
+            break;
+        case EntityType::TURRET:
+            health = 100;
+            break;
+        case EntityType::RESOURCE:
+            health = 30;
+            break;
+        case EntityType::WALL:
+            health = 50;
+            break;
+        case EntityType::HOUSE:
+            health = 50;
+            break;
+    }
+    return health;
+}
+
+int Entity::attackRange()
+{
+    int range = 0;
+    switch (entityType)
+    {
+        case EntityType::BUILDER_BASE:
+            range = 0;
+            break;
+        case EntityType::MELEE_BASE:
+            range = 0;
+            break;
+        case EntityType::RANGED_BASE:
+            range = 0;
+            break;
+        case EntityType::BUILDER_UNIT:
+            range = 1;
+            break;
+        case EntityType::RANGED_UNIT:
+            range = 5;
+            break;
+        case EntityType::MELEE_UNIT:
+            range = 1;
+            break;
+        case EntityType::TURRET:
+            range = 5;
+            break;
+        case EntityType::RESOURCE:
+            range = 0;
+            break;
+        case EntityType::WALL:
+            range = 0;
+            break;
+        case EntityType::HOUSE:
+            range = 0;
+            break;
+    }
+    return range;
+}
+
+int Entity::damage()
+{
+    int dmg = 0;
+    switch (entityType)
+    {
+        case EntityType::BUILDER_BASE:
+            dmg = 0;
+            break;
+        case EntityType::MELEE_BASE:
+            dmg = 0;
+            break;
+        case EntityType::RANGED_BASE:
+            dmg = 0;
+            break;
+        case EntityType::BUILDER_UNIT:
+            dmg = 1;
+            break;
+        case EntityType::RANGED_UNIT:
+            dmg = 5;
+            break;
+        case EntityType::MELEE_UNIT:
+            dmg = 5;
+            break;
+        case EntityType::TURRET:
+            dmg = 5;
+            break;
+        case EntityType::RESOURCE:
+            dmg = 0;
+            break;
+        case EntityType::WALL:
+            dmg = 0;
+            break;
+        case EntityType::HOUSE:
+            dmg = 0;
+            break;
+    }
+    return dmg;
+}

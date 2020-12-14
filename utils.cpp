@@ -17,7 +17,7 @@ float unitBalance(float x)
     return balance;
 }
 
-void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int entityType, int size, int padding)
+void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int value, int size, int padding)
 {
     int map_size = map[0].size();
     int x_start, x_finish, y_start, y_finish;
@@ -44,7 +44,7 @@ void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int entityTyp
     for (int i = x_start; i < x_finish; i++)
         for (int j = y_start; j < y_finish; j++)
         {
-            map[i][j] = entityType;
+            map[i][j] = value;
         }
             
 }

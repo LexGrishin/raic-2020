@@ -47,7 +47,7 @@ int distance(Vec2Int& a, Vec2Int& b);
 
 float unitBalance(float x);
 
-void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int entityType, int size, int padding);
+void fillMapCells(std::vector<std::vector<int>>& map, Vec2Int pos, int value, int size, int padding);
 void fillDamageMap(std::vector<std::vector<int>>& map, Vec2Int pos, int radius, int attack);
 Vec2Int getRetreatPos(Vec2Int pos, std::vector<std::vector<int>>& mapDamage, std::vector<std::vector<int>>& mapOccupied);
 int countUnitsInRadius(Vec2Int pos, int radius, std::vector<std::vector<int>>& map);

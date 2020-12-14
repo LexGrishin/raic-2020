@@ -27,7 +27,12 @@ public:
 
     // -------------------------------------------------------------------------------------------------------------
     int distToTarget;
-    int Entity::getSize();
+    int getSize();
+    int populationProvide();
+    int populationUse();
+    int maxHealth();
+    int attackRange();
+    int damage();
     std::tuple<Vec2Int, int> Entity::getDockingPos(Vec2Int& requesterPos, std::vector<std::vector<int>>& mapOccupied);
 
 };
