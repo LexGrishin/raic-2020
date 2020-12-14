@@ -46,7 +46,6 @@ public:
     std::unordered_map<EntityType, EntityProperties> entityProperties;
     std::vector<Entity> busyUnits;
     std::vector<Entity> buildOrder;
-    std::vector<int> buildStage;
 
     std::vector <std::shared_ptr<DebugData>> debugData;
 
@@ -73,6 +72,7 @@ public:
     std::vector<Entity> findFreePosOnBuildCellMap(std::vector<std::vector<int>>& map, EntityType type);
     Vec2Int findClosestFreePosNearBuilding(Entity& entity, Entity& building, std::vector<std::vector<int>>& mapOccupied);
     void delDeadUnitsFromBuildOrder();
+    void delImposibleOrders(std::vector<std::vector<int>>& mapBuilding);
     Vec2Int findPosNearBuilding(Entity& entity, Entity& building);
     Vec2Int getNextStep(Entity entity, Entity target, std::vector<std::vector<int>>& mapOccupied);
 

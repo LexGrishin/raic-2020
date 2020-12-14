@@ -52,7 +52,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     countRangeUnits = 0;
     potentialPopulation = 0;
 
-    // cout<<"Here: 2"<<endl;
+    cout<<"Here: 2"<<endl;
 
     // Fill maps and unit arrays.
     for (Entity entity : playerView.entities)
@@ -161,7 +161,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     }
 
 
-    // cout<<"Here: 3"<<endl;
+    cout<<"Here: 3"<<endl;
 
     // Fill map of potential damage from enemy units.
     for (Entity ent: enemyEntities)
@@ -195,7 +195,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         fillDamageMap(mapAttack, ent.position, radius, damage);
     }
 
-    // cout<<"Here: 4"<<endl;
+    cout<<"Here: 4"<<endl;
     
     myAvailableResources = playersInfo[playerView.myId].resource;
     d_Resources = myAvailableResources - lastAvailableResources;
@@ -203,8 +203,14 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     myAvailablePopulation = playerPopulation[playerView.myId].available - playerPopulation[playerView.myId].inUse;
 
     delDeadUnitsFromBuildOrder();
+    delImposibleOrders(mapBuilding);
 
-    // cout<<"Here: 5"<<endl;
+    for (Entity ent : buildOrder)
+    {
+        fillMapCells(mapBuilding, ent.position, 1, entityProperties[ent.entityType].size, 1);
+    }
+
+    cout<<"Here: 5"<<endl;
     
     // Choose turns order.
     // int n = myUnits.size();
@@ -260,6 +266,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
 
     resourses = filterFreeResources(resourses, mapResourse);
 
+    cout<<"Here: 5.1"<<endl;
     // int counter = 0;
     for (Entity entity : myUnits)
     {
@@ -278,7 +285,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         // counter++;
     }
 
-    // cout<<"Here: 6"<<endl;
+    cout<<"Here: 6"<<endl;
 
     Entity nearestEnemyToBase = findNearestEntity(baseCenter, enemyEntities);
     int enemyDistToBase = 100000;
@@ -291,7 +298,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         orders[entity.id] = action;
     }
 
-    // cout<<"Here: 7"<<endl;
+    cout<<"Here: 7"<<endl;
 
     for (Entity entity : myTurrets)
     {
@@ -330,7 +337,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     float tickBalance = unitBalance(playerView.currentTick);
     float currentBalance = float(countBuilderUnits)/(float(countRangeUnits + countMeleeUnits + countBuilderUnits) + 0.000001);
 
-    // cout<<"Here: 8"<<endl;
+    cout<<"Here: 8"<<endl;
 
     Color color;
     if (currentBalance < tickBalance)
@@ -358,7 +365,6 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         <<" My D: "<<myDamagedBuildings.size()
         <<" BO: "<<buildOrder.size()
         <<" BU: "<<busyUnits.size()
-        <<" BS: "<<buildStage.size()
         <<endl;
 
     return Action(orders);
@@ -387,6 +393,9 @@ void MyStrategy::setGlobals(const PlayerView& playerView)
     remontPoint.playerId = std::make_shared<int>(playerView.myId);
     baseCenter.entityType = EntityType::MELEE_UNIT;
     baseCenter.playerId = std::make_shared<int>(playerView.myId);
+    enemyCenter1.entityType = EntityType::MELEE_UNIT;
+    enemyCenter2.entityType = EntityType::MELEE_UNIT;
+    enemyCenter2.entityType = EntityType::MELEE_UNIT;
     for (Entity entity : playerView.entities)
     {
         if (entity.entityType == EntityType::RESOURCE) continue;
@@ -499,6 +508,9 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
 
     Entity nearestResource = findNearestResourse(entity, resourses);
     Entity nearestDamagedBuilding = findNearestEntity(entity, myDamagedBuildings);
+
+    cout<<"Here: 5.1.1"<<endl;
+
     int radius = 2;
     int stayDamage = countDamageSum(entity.position, radius, mapDamage);
 
@@ -512,14 +524,14 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
             orderId = i;
             
             this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(std::make_shared<Vec2Float>(entity.position.x, entity.position.y), Vec2Float(0, 0), colors::red), 
-                                                           "B"+to_string(buildStage[orderId]),0, 20));
+                                                           "B",0, 20));
             // ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::green};
             // ColoredVertex B{std::make_shared<Vec2Float>(buildOrder[orderId].position.x, buildOrder[orderId].position.y), {0, 0}, colors::green};
             // std::vector<ColoredVertex> line{A, B};
             // this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
             break;
         }
-
+    cout<<"Here: 5.1.2"<<endl;
     if (stayDamage > 4) // Поблизости враги! Отступаем.
     {
         MoveAction action;
@@ -537,6 +549,7 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
             if ((distance(entity, nearestDamagedBuilding) < 2) // Если мы в двух шагах, то идем чинить.
                || (entity.id % 10 == 0 && dist < 15))
             {
+                cout<<"Here: 5.1. go repair"<<endl;
                 MoveAction action;
                 // Vec2Int nextStep = getNextStep(entity, nearestDamagedBuilding, mapOccupied);
                 // action.target = nextStep;
@@ -554,6 +567,7 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
             {
                 if (distance(entity, nearestResource)>=(*entityProperties[entity.entityType].attack).attackRange)
                 {
+                    cout<<"Here: 5.1. not repair go harvest"<<endl;
                     MoveAction action;
                     // Vec2Int nextStep = getNextStep(entity, nearestResource, mapOccupied);
                     // action.target = nextStep;
@@ -561,13 +575,14 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
                     action.breakThrough = false;
                     action.findClosestPosition = true;
                     resultAction.moveAction = std::make_shared<MoveAction>(action);
-                    ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::white};
-                    ColoredVertex B{std::make_shared<Vec2Float>(action.target.x, action.target.y), {0, 0}, colors::white};
-                    std::vector<ColoredVertex> line{A, B};
-                    this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+                    // ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::white};
+                    // ColoredVertex B{std::make_shared<Vec2Float>(action.target.x, action.target.y), {0, 0}, colors::white};
+                    // std::vector<ColoredVertex> line{A, B};
+                    // this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
                 }
                 else
                 {
+                    cout<<"Here: 5.1. not repair - harvest!"<<endl;
                     AttackAction action;
                     action.target = std::make_shared<int>(nearestResource.id);
                     resultAction.attackAction = std::make_shared<AttackAction>(action);
@@ -575,6 +590,7 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
             } 
             else // Если нет ресурсов поблизости
             {
+                cout<<"Here: 5.1. no resourses"<<endl;
                 if (entity.id % 3 == 1)
                 {
                     MoveAction action;
@@ -603,6 +619,7 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
         }
         else // Если мы рядом, то чиним.
         {
+            cout<<"Here: 5.1. repair"<<endl;
             RepairAction action;
             action.target = nearestDamagedBuilding.id;
             resultAction.repairAction = std::make_shared<RepairAction>(action);
@@ -610,11 +627,13 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
     }
     else if (isBusy) // Юнит участвует в строительсве.
     {
+        cout<<"Here: 5.1. busy"<<endl;
         Entity target = buildOrder[orderId];
         int dist = distance(entity, target);
         // cout<<"Distance: "<<dist<<" | "<<orderId<<" | ("<<target.position.x<<", "<<target.position.y<<")"<<endl;
         if (dist != 0) 
         {
+            cout<<"Here: 5.1. busy go to target"<<endl;
             MoveAction action;
             Vec2Int buildPos = findClosestFreePosNearBuilding(entity, target, mapOccupied);
             action.target = buildPos;
@@ -623,7 +642,6 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
             action.breakThrough = false;
             action.findClosestPosition = true;
             resultAction.moveAction = std::make_shared<MoveAction>(action);
-            buildStage[orderId] = 1;
 
             ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::yellow};
             ColoredVertex B{std::make_shared<Vec2Float>(action.target.x, action.target.y), {0, 0}, colors::yellow};
@@ -632,13 +650,13 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
         }
         else //if (buildStage[orderId] == 1) 
         {
+            cout<<"Here: 5.1. busy build"<<endl;
             BuildAction action;
             action.entityType = target.entityType;
             action.position = target.position;
             resultAction.buildAction = std::make_shared<BuildAction>(action);
             buildOrder.erase(buildOrder.begin() + orderId);
             busyUnits.erase(busyUnits.begin() + orderId);
-            buildStage.erase(buildStage.begin() + orderId);
             // ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::red};
             // ColoredVertex B{std::make_shared<Vec2Float>(action.position.x, action.position.y), {0, 0}, colors::red};
             // std::vector<ColoredVertex> line{A, B};
@@ -649,6 +667,7 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
     {
         if (distance(entity, nearestResource)>=(*entityProperties[entity.entityType].attack).attackRange)
         {
+            cout<<"Here: 5.1. harvest"<<endl;
             MoveAction action;
             // Vec2Int nextStep = getNextStep(entity, nearestResource, mapOccupied);
             // action.target = nextStep;
@@ -663,6 +682,7 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
         }
         else
         {
+            cout<<"Here: 5.1. harvest - attack"<<endl;
             AttackAction action;
             action.target = std::make_shared<int>(nearestResource.id);
             resultAction.attackAction = std::make_shared<AttackAction>(action);
@@ -670,6 +690,7 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
     } 
     else // Если нет ресурсов поблизости
     {
+        cout<<"Here: 5.1. last no res"<<endl;
         if (entity.id % 3 == 1)
         {
             MoveAction action;
@@ -695,8 +716,44 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
             resultAction.moveAction = std::make_shared<MoveAction>(action);
         }
     }
+    cout<<"Here: 5.1. return "<<endl;
     return resultAction;
 }
+
+void MyStrategy::delImposibleOrders(vector<vector<int>>& mapBuilding)
+{
+    vector<Entity> newBusyUnits;
+    vector<Entity> newBuildOrder;
+    vector<int> newBuildStage;
+    int orderLength = buildOrder.size();
+    
+    for (int i = 0; i < orderLength; i++)
+    {
+        bool isImposible = false;
+        int size = entityProperties[buildOrder[i].entityType].size;
+        for (int j = buildOrder[i].position.x; j < buildOrder[i].position.x + size; j++)
+        {
+            for (int k = buildOrder[i].position.y; k < buildOrder[i].position.y + size; k++)
+            {
+                if (mapBuilding[j][k] != 0)
+                {
+                    isImposible = true;
+                    break;
+                }
+            }
+            if (isImposible) break;
+        }
+        
+        if (!isImposible)
+        {
+            newBusyUnits.emplace_back(busyUnits[i]);
+            newBuildOrder.emplace_back(buildOrder[i]);
+        }
+    }
+    busyUnits = newBusyUnits;
+    buildOrder = newBuildOrder;
+}
+
 
 void MyStrategy::delDeadUnitsFromBuildOrder()
 {
@@ -717,12 +774,10 @@ void MyStrategy::delDeadUnitsFromBuildOrder()
         {
             newBusyUnits.emplace_back(busyUnits[i]);
             newBuildOrder.emplace_back(buildOrder[i]);
-            newBuildStage.emplace_back(buildStage[i]);
         }
     }
     busyUnits = newBusyUnits;
     buildOrder = newBuildOrder;
-    buildStage = newBuildStage;
 }
 
 void MyStrategy::fillBuildOrder(vector<vector<int>>& mapBuilding, std::unordered_map<int, EntityAction>& orders)
@@ -740,8 +795,6 @@ void MyStrategy::fillBuildOrder(vector<vector<int>>& mapBuilding, std::unordered
                 {
                     busyUnits.emplace_back(builder);
                     buildOrder.emplace_back(base);
-                    buildStage.emplace_back(1);
-                    fillMapCells(mapBuilding, base.position, 1, entityProperties[EntityType::BUILDER_BASE].size, 1);
                 }
             }
         }
@@ -756,8 +809,6 @@ void MyStrategy::fillBuildOrder(vector<vector<int>>& mapBuilding, std::unordered
                 {
                     busyUnits.emplace_back(builder);
                     buildOrder.emplace_back(base);
-                    buildStage.emplace_back(1);
-                    fillMapCells(mapBuilding, base.position, 1, entityProperties[EntityType::RANGED_BASE].size, 1);
                 }
             }
         }
@@ -772,8 +823,6 @@ void MyStrategy::fillBuildOrder(vector<vector<int>>& mapBuilding, std::unordered
                 {
                     busyUnits.emplace_back(builder);
                     buildOrder.emplace_back(house);
-                    buildStage.emplace_back(1);
-                    fillMapCells(mapBuilding, house.position, 1, entityProperties[EntityType::HOUSE].size, 1);
                 }
             }
         }
