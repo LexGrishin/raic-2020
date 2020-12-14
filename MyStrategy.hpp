@@ -14,21 +14,20 @@ public:
     bool isGlobalsSet = false;
     int myAvailableResources = 0;
     int myAvailablePopulation = 0;
-    int atackUnitOrder = 0;
-    int builderUnitOrder = 0;
-    int constructOrder = 0;
+
     int lastAvailableResources = 0;
     int d_Resources = 0;
+
     int countRangeUnits = 0;
     int countMeleeUnits = 0;
     int countBuilderUnits = 0;
+    
     int potentialPopulation;
 
     int countBase = 0;
     int countRangeBase = 0;
     int countMeleBase = 0;
 
-    Entity defaultTarget;
     Entity remontPoint;
     Entity baseCenter;
     Entity enemyCenter1;
@@ -36,7 +35,6 @@ public:
     Entity enemyCenter3;
 
     std::vector<Entity> resourses, 
-                        freeResourses,
                         enemyEntities, 
                         myUnits, 
                         myTurrets,
@@ -78,16 +76,6 @@ public:
 
     std::vector<Entity> filterFreeResources(std::vector<Entity>& resourses, std::vector<std::vector<int>>& mapResourse);
     Entity findNearestResourse(Entity& entity, std::vector<Entity>& entities);
-    // Vec2Int findPosNearEntity
-    // Entity findNearestReachableResource(Entity& entity, std::unordered_map<int, Entity>& entities);
-    // EntityAction getAttackUnitAction(Entity& entity, 
-    //                                  std::vector<std::vector<int>>& mapAttack, 
-    //                                  std::vector<std::vector<int>>& mapDamage,
-    //                                  std::vector<std::vector<int>>& mapOccupied);
-    // MoveAnalysis analyzeMove(Entity& entity, int dx, int dy, Entity& target,
-    //                                  std::vector<std::vector<int>>& mapAttack, 
-    //                                  std::vector<std::vector<int>>& mapDamage,
-    //                                  std::vector<std::vector<int>>& mapOccupied);
 };
 
 #endif
