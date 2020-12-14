@@ -9,7 +9,6 @@
 using std::cout;
 using std::endl;
 using std::to_string;
-using std::vector;
 
 MyStrategy::MyStrategy() {}
 
@@ -30,13 +29,13 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         playerPopulation[player.id] = population;
     }
     
-    vector<vector<int>> mapOccupied(playerView.mapSize, vector<int>(playerView.mapSize, 0));
-    vector<vector<int>> mapResourse(playerView.mapSize, vector<int>(playerView.mapSize, 0));
-    vector<vector<int>> mapBuilding(playerView.mapSize, vector<int>(playerView.mapSize, 0));
-    vector<vector<int>> mapAttack(playerView.mapSize, vector<int>(playerView.mapSize, 0));
-    vector<vector<int>> mapDamage(playerView.mapSize, vector<int>(playerView.mapSize, 0));
-    vector<vector<int>> mapAlly(playerView.mapSize, vector<int>(playerView.mapSize, -1));
-    vector<vector<int>> mapEnemy(playerView.mapSize, vector<int>(playerView.mapSize, -1));
+    std::vector<std::vector<int>> mapOccupied(playerView.mapSize, std::vector<int>(playerView.mapSize, 0));
+    std::vector<std::vector<int>> mapResourse(playerView.mapSize, std::vector<int>(playerView.mapSize, 0));
+    std::vector<std::vector<int>> mapBuilding(playerView.mapSize, std::vector<int>(playerView.mapSize, 0));
+    std::vector<std::vector<int>> mapAttack(playerView.mapSize, std::vector<int>(playerView.mapSize, 0));
+    std::vector<std::vector<int>> mapDamage(playerView.mapSize, std::vector<int>(playerView.mapSize, 0));
+    std::vector<std::vector<int>> mapAlly(playerView.mapSize, std::vector<int>(playerView.mapSize, -1));
+    std::vector<std::vector<int>> mapEnemy(playerView.mapSize, std::vector<int>(playerView.mapSize, -1));
 
     resourses.clear(); 
     enemyEntities.clear();
@@ -460,41 +459,7 @@ void MyStrategy::setGlobals(const PlayerView& playerView)
     }
 }
 
-int MyStrategy::distance(Entity& e1, Entity& e2)
-{
-    int dx, dy;
-    int e1_xmin = e1.position.x;
-    int e1_xmax = e1.position.x + entityProperties.at(e1.entityType).size - 1;
-    int e1_ymin = e1.position.y;
-    int e1_ymax = e1.position.y + entityProperties.at(e1.entityType).size - 1;
-    int e2_xmin = e2.position.x;
-    int e2_xmax = e2.position.x + entityProperties.at(e2.entityType).size - 1;
-    int e2_ymin = e2.position.y;
-    int e2_ymax = e2.position.y + entityProperties.at(e2.entityType).size - 1;
-
-    if ((e1_xmin >= e2_xmin && e1_xmin <= e2_xmax)
-     || (e1_xmax >= e2_xmin && e1_xmax <= e2_xmax)
-     || (e2_xmin >= e1_xmin && e2_xmin <= e1_xmax)
-     || (e2_xmax >= e1_xmin && e2_xmax <= e1_xmax))
-        dx = 0;
-    else if (e1_xmin < e2_xmin)
-        dx = e2_xmin - e1_xmin - entityProperties.at(e1.entityType).size + 1;
-    else
-        dx = e1_xmin - e2_xmin - entityProperties.at(e2.entityType).size + 1;
-
-    if ((e1_ymin >= e2_ymin && e1_ymin <= e2_ymax)
-     || (e1_ymax >= e2_ymin && e1_ymax <= e2_ymax)
-     || (e2_ymin >= e1_ymin && e2_ymin <= e1_ymax)
-     || (e2_ymax >= e1_ymin && e2_ymax <= e1_ymax))
-        dy = 0;
-    else if (e1_ymin < e2_ymin)
-        dy = e2_ymin - e1_ymin - entityProperties.at(e1.entityType).size + 1;
-    else
-        dy = e1_ymin - e2_ymin - entityProperties.at(e2.entityType).size + 1;
-    return dx + dy - 1;
-}
-
-EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<int>>& mapOccupied, vector<vector<int>>& mapDamage)
+EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, std::vector<std::vector<int>>& mapOccupied, std::vector<std::vector<int>>& mapDamage)
 {
     EntityAction resultAction;
     resultAction.attackAction = nullptr;
@@ -627,7 +592,7 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
         {
             cout<<"Here: 5.1. busy go to target"<<endl;
             MoveAction action;
-            Vec2Int buildPos = findClosestFreePosNearBuilding(entity, target, mapOccupied);
+            Vec2Int buildPos = getBestPosNearEntity(entity, target, mapOccupied);
             action.target = buildPos;
             action.breakThrough = false;
             action.findClosestPosition = true;
@@ -708,11 +673,11 @@ EntityAction MyStrategy::chooseBuilderUnitAction(Entity& entity, vector<vector<i
     return resultAction;
 }
 
-void MyStrategy::delImposibleOrders(vector<vector<int>>& mapBuilding)
+void MyStrategy::delImposibleOrders(std::vector<std::vector<int>>& mapBuilding)
 {
-    vector<Entity> newBusyUnits;
-    vector<Entity> newBuildOrder;
-    vector<int> newBuildStage;
+    std::vector<Entity> newBusyUnits;
+    std::vector<Entity> newBuildOrder;
+    std::vector<int> newBuildStage;
     int orderLength = buildOrder.size();
     
     for (int i = 0; i < orderLength; i++)
@@ -742,12 +707,11 @@ void MyStrategy::delImposibleOrders(vector<vector<int>>& mapBuilding)
     buildOrder = newBuildOrder;
 }
 
-
 void MyStrategy::delDeadUnitsFromBuildOrder()
 {
-    vector<Entity> newBusyUnits;
-    vector<Entity> newBuildOrder;
-    vector<int> newBuildStage;
+    std::vector<Entity> newBusyUnits;
+    std::vector<Entity> newBuildOrder;
+    std::vector<int> newBuildStage;
     int orderLength = buildOrder.size();
     for (int i = 0; i < orderLength; i++)
     {
@@ -768,13 +732,13 @@ void MyStrategy::delDeadUnitsFromBuildOrder()
     buildOrder = newBuildOrder;
 }
 
-void MyStrategy::fillBuildOrder(vector<vector<int>>& mapBuilding, std::unordered_map<int, EntityAction>& orders)
+void MyStrategy::fillBuildOrder(std::vector<std::vector<int>>& mapBuilding, std::unordered_map<int, EntityAction>& orders)
 {
     if (buildOrder.size() < 1)
     {
         if (countBase == 0 && myAvailableResources >= entityProperties[EntityType::BUILDER_BASE].initialCost)
         {
-            vector<Entity> possibleBuildPositions = findFreePosOnBuildCellMap(mapBuilding, EntityType::BUILDER_BASE);
+            std::vector<Entity> possibleBuildPositions = findFreePosOnBuildCellMap(mapBuilding, EntityType::BUILDER_BASE);
             Entity builder = findNearestFreeBuilder(baseCenter, orders);
             if (builder.id != -1 && possibleBuildPositions.size() > 0)
             {
@@ -788,7 +752,7 @@ void MyStrategy::fillBuildOrder(vector<vector<int>>& mapBuilding, std::unordered
         }
         else if (countRangeBase < 2 && myAvailableResources >= entityProperties[EntityType::RANGED_BASE].initialCost)
         {
-            vector<Entity> possibleBuildPositions = findFreePosOnBuildCellMap(mapBuilding, EntityType::RANGED_BASE);
+            std::vector<Entity> possibleBuildPositions = findFreePosOnBuildCellMap(mapBuilding, EntityType::RANGED_BASE);
             Entity builder = findNearestFreeBuilder(baseCenter, orders);
             if (builder.id != -1 && possibleBuildPositions.size() > 0)
             {
@@ -802,7 +766,7 @@ void MyStrategy::fillBuildOrder(vector<vector<int>>& mapBuilding, std::unordered
         }
         else if (myAvailablePopulation < 7 && myAvailableResources >= entityProperties[EntityType::HOUSE].initialCost)
         {
-            vector<Entity> possibleBuildPositions = findFreePosOnBuildCellMap(mapBuilding, EntityType::HOUSE);
+            std::vector<Entity> possibleBuildPositions = findFreePosOnBuildCellMap(mapBuilding, EntityType::HOUSE);
             Entity builder = findNearestFreeBuilder(baseCenter, orders);
             if (builder.id != -1 && possibleBuildPositions.size() > 0)
             {
@@ -846,7 +810,7 @@ Entity MyStrategy::findNearestFreeBuilder(Entity& entity, std::unordered_map<int
     return nearestEntity;
 }
 
-EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerView& playerView, int enemyDistToBase, vector<vector<int>>& mapOccupied)
+EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerView& playerView, int enemyDistToBase, std::vector<std::vector<int>>& mapOccupied)
 {
     EntityAction resultAction;
     float tickBalance = unitBalance(playerView.currentTick);
@@ -865,7 +829,7 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
                 nearestResourse.entityType = EntityType::RESOURCE;
             }
                 
-            Vec2Int recruit_pos = findClosestFreePosNearBuilding(nearestResourse, entity, mapOccupied);
+            Vec2Int recruit_pos = getBestPosNearEntity(nearestResourse, entity, mapOccupied);
             
             if (recruit_pos.x >= 0)
             {
@@ -888,7 +852,7 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
                 nearestEnemy.position = default_pos;
                 nearestEnemy.entityType = EntityType::RANGED_UNIT;
             }
-            Vec2Int recruit_pos = findClosestFreePosNearBuilding(nearestEnemy, entity, mapOccupied);
+            Vec2Int recruit_pos = getBestPosNearEntity(nearestEnemy, entity, mapOccupied);
             if (recruit_pos.x >= 0)
             {
                 BuildAction action;
@@ -910,7 +874,7 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
                 nearestEnemy.position = default_pos;
                 nearestEnemy.entityType = EntityType::RANGED_UNIT;
             }
-            Vec2Int recruit_pos = findClosestFreePosNearBuilding(nearestEnemy, entity, mapOccupied);
+            Vec2Int recruit_pos = getBestPosNearEntity(nearestEnemy, entity, mapOccupied);
             if (recruit_pos.x >= 0)
             {
                 BuildAction action;
@@ -928,10 +892,10 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
 }
 
 EntityAction MyStrategy::chooseRangeUnitAction(Entity& entity, 
-                                                vector<vector<int>>& mapOccupied, 
-                                                vector<vector<int>>& mapAlly, 
-                                                vector<vector<int>>& mapEnemy,
-                                                vector<vector<int>>& mapDamage)
+                                                std::vector<std::vector<int>>& mapOccupied, 
+                                                std::vector<std::vector<int>>& mapAlly, 
+                                                std::vector<std::vector<int>>& mapEnemy,
+                                                std::vector<std::vector<int>>& mapDamage)
 {
     EntityAction resultAction;
     resultAction.attackAction = nullptr;
@@ -1091,10 +1055,10 @@ EntityAction MyStrategy::chooseRangeUnitAction(Entity& entity,
 }
 
 EntityAction MyStrategy::chooseMeleeUnitAction(Entity& entity, 
-                                                vector<vector<int>>& mapOccupied, 
-                                                vector<vector<int>>& mapAlly, 
-                                                vector<vector<int>>& mapEnemy,
-                                                vector<vector<int>>& mapDamage)
+                                                std::vector<std::vector<int>>& mapOccupied, 
+                                                std::vector<std::vector<int>>& mapAlly, 
+                                                std::vector<std::vector<int>>& mapEnemy,
+                                                std::vector<std::vector<int>>& mapDamage)
 {
     EntityAction resultAction;
     resultAction.attackAction = nullptr;
@@ -1153,7 +1117,7 @@ Entity MyStrategy::findNearestEntity(Entity& entity, std::vector<Entity>& entiti
     return nearestEntity;
 }
 
-vector<Entity> MyStrategy::findFreePosOnBuildCellMap(vector<vector<int>>& map, EntityType type)
+std::vector<Entity> MyStrategy::findFreePosOnBuildCellMap(std::vector<std::vector<int>>& map, EntityType type)
 {
     std::vector<Entity> positions;
     int mapSize = map[0].size();
@@ -1194,83 +1158,9 @@ vector<Entity> MyStrategy::findFreePosOnBuildCellMap(vector<vector<int>>& map, E
     return positions;
 }
 
-Vec2Int MyStrategy::findClosestFreePosNearBuilding(Entity& entity, Entity& building, vector<vector<int>>& mapOccupied)
-{  
-    int size = entityProperties[building.entityType].size;
-    int mapSize = mapOccupied[0].size();
-    int min_dist = 100000;
-    Vec2Int min_pos{-1, -1};
-
-    if (building.position.x > 0)
-        for (int y = building.position.y; y < building.position.y + size; y++)
-        {
-            if (mapOccupied[building.position.x - 1][y] == 0)
-            {
-                Entity e;
-                e.entityType = EntityType::BUILDER_UNIT;
-                e.position = Vec2Int{building.position.x - 1, y};
-                int dist = distance(entity, e);
-                if (dist < min_dist)
-                {
-                    min_dist = dist;
-                    min_pos = e.position;
-                }
-            }
-        }
-    if (building.position.x + size < mapSize)
-        for (int y = building.position.y; y < building.position.y + size; y++)
-        {
-            if (mapOccupied[building.position.x + size][y] == 0)
-            {
-                Entity e;
-                e.entityType = EntityType::BUILDER_UNIT;
-                e.position = Vec2Int{building.position.x + size, y};
-                int dist = distance(entity, e);
-                if (dist < min_dist)
-                {
-                    min_dist = dist;
-                    min_pos = e.position;
-                }
-            }
-        }
-    if (building.position.y + size < mapSize)
-        for (int x = building.position.x; x < building.position.x + size; x++)
-        {
-            if (mapOccupied[x][building.position.y + size] == 0)
-            {
-                Entity e;
-                e.entityType = EntityType::BUILDER_UNIT;
-                e.position = Vec2Int{x, building.position.y + size};
-                int dist = distance(entity, e);
-                if (dist < min_dist)
-                {
-                    min_dist = dist;
-                    min_pos = e.position;
-                }
-            }
-        }
-    if (building.position.y > 0)
-        for (int x = building.position.x; x < building.position.x + size; x++)
-        {
-            if (mapOccupied[x][building.position.y - 1] == 0)
-            {
-                Entity e;
-                e.entityType = EntityType::BUILDER_UNIT;
-                e.position = Vec2Int{x, building.position.y - 1};
-                int dist = distance(entity, e);
-                if (dist < min_dist)
-                {
-                    min_dist = dist;
-                    min_pos = e.position;
-                }
-            }
-        }
-    return min_pos;
-}
-
-vector<Entity> MyStrategy::filterFreeResources(vector<Entity>& resourses, vector<vector<int>>& mapResourse)
+std::vector<Entity> MyStrategy::filterFreeResources(std::vector<Entity>& resourses, std::vector<std::vector<int>>& mapResourse)
 {
-    vector<Entity> filteredRes;
+    std::vector<Entity> filteredRes;
     for (Entity e: resourses)
     {
         if(isAvailable(mapResourse, e.position, 1))

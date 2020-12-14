@@ -48,7 +48,6 @@ public:
     std::vector <std::shared_ptr<DebugData>> debugData;
 
     void setGlobals(const PlayerView& playerView);
-    int distance(Entity& e1, Entity& e2);
     EntityAction chooseBuilderUnitAction(Entity& entity, 
                                          std::vector<std::vector<int>>& mapOccupied,
                                          std::vector<std::vector<int>>& mapDamage);
@@ -68,7 +67,7 @@ public:
     Entity findNearestEntity(Entity& entity, std::vector<Entity>& entities);
     Entity findNearestFreeBuilder(Entity& entity, std::unordered_map<int, EntityAction>& orders);
     std::vector<Entity> findFreePosOnBuildCellMap(std::vector<std::vector<int>>& map, EntityType type);
-    Vec2Int findClosestFreePosNearBuilding(Entity& entity, Entity& building, std::vector<std::vector<int>>& mapOccupied);
+    Vec2Int getBestPosNearEntity(Entity& entity, Entity& building, std::vector<std::vector<int>>& mapOccupied);
     void delDeadUnitsFromBuildOrder();
     void delImposibleOrders(std::vector<std::vector<int>>& mapBuilding);
     Vec2Int findPosNearBuilding(Entity& entity, Entity& building);

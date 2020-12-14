@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <math.h>
 
 #include "model/Model.hpp"
 
@@ -11,7 +12,7 @@ namespace colors
   const Color red{1, 0, 0, 1};
   const Color green{0, 1, 0, 1};
   const Color white{1, 1, 1, 1};
-  const Color yellow{0.5, 0.5, 0, 1};
+  const Color yellow{1, 1, 0, 1};
 }
 
 namespace debug
@@ -41,6 +42,8 @@ struct MoveAnalysis
     int maxDamage;
     float total;
 };
+
+int distance(Entity& a, Entity& b);
 
 float unitBalance(float x);
 

@@ -1,5 +1,11 @@
 #include "utils.hpp"
-#include <math.h>
+
+int distance(Vec2Int& a, Vec2Int& b)
+{
+    int dx = abs(a.x - b.x);
+    int dy = abs(a.y - b.y);
+    return dx + dy;
+}
 
 float unitBalance(float x)
 {
