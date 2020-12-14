@@ -43,7 +43,7 @@ struct MoveAnalysis
     float total;
 };
 
-int distance(Entity& a, Entity& b);
+int distance(Vec2Int& a, Vec2Int& b);
 
 float unitBalance(float x);
 

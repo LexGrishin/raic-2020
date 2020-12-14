@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <tuple>
+#include "../utils.hpp"
 
 class Entity {
 public:
@@ -25,7 +27,8 @@ public:
 
     // -------------------------------------------------------------------------------------------------------------
     int distToTarget;
-    Vec2Int Entity::getDockingPos(Entity& entity, std::vector<std::vector<int>>& mapOccupied);
+    int Entity::getSize();
+    std::tuple<Vec2Int, int> Entity::getDockingPos(Vec2Int& requesterPos, std::vector<std::vector<int>>& mapOccupied);
 
 };
 

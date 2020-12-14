@@ -67,76 +67,97 @@ void Entity::writeTo(OutputStream& stream) const {
 
 // -------------------------------------------------------------------------------------------------------------------------------
 
-Vec2Int Entity::getDockingPos(Entity& entity, std::vector<std::vector<int>>& mapOccupied)
+std::tuple<Vec2Int, int> Entity::getDockingPos(Vec2Int& requesterPos, std::vector<std::vector<int>>& mapOccupied)
 {  
-    int size = entityProperties[building.entityType].size;
+    int size = getSize();
     int mapSize = mapOccupied[0].size();
-    int min_dist = 100000;
-    Vec2Int min_pos{-1, -1};
 
-    if (building.position.x > 0)
-        for (int y = building.position.y; y < building.position.y + size; y++)
+    int dockingDist = 2*mapSize;
+    Vec2Int dockingPos{-1, -1};
+
+    if (position.x > 0)
+        for (int y = position.y; y < position.y + size; y++)
         {
-            if (mapOccupied[building.position.x - 1][y] == 0)
+            if (mapOccupied[position.x - 1][y] == 0)
             {
-                Entity e;
-                e.entityType = EntityType::BUILDER_UNIT;
-                e.position = Vec2Int{building.position.x - 1, y};
-                int dist = distance(entity, e);
-                if (dist < min_dist)
+                Vec2Int testPos{position.x - 1, y};
+                int dist = distance(testPos, requesterPos);
+                if (dist < dockingDist)
                 {
-                    min_dist = dist;
-                    min_pos = e.position;
+                    dockingDist = dist;
+                    dockingPos = testPos;
                 }
             }
         }
-    if (building.position.x + size < mapSize)
-        for (int y = building.position.y; y < building.position.y + size; y++)
+    if (position.x + size < mapSize)
+        for (int y = position.y; y < position.y + size; y++)
         {
-            if (mapOccupied[building.position.x + size][y] == 0)
+            if (mapOccupied[position.x + size][y] == 0)
             {
-                Entity e;
-                e.entityType = EntityType::BUILDER_UNIT;
-                e.position = Vec2Int{building.position.x + size, y};
-                int dist = distance(entity, e);
-                if (dist < min_dist)
+                Vec2Int testPos{position.x + size, y};
+                int dist = distance(testPos, requesterPos);
+                if (dist < dockingDist)
                 {
-                    min_dist = dist;
-                    min_pos = e.position;
+                    dockingDist = dist;
+                    dockingPos = testPos;
                 }
             }
         }
-    if (building.position.y + size < mapSize)
-        for (int x = building.position.x; x < building.position.x + size; x++)
+    if (position.y + size < mapSize)
+        for (int x = position.x; x < position.x + size; x++)
         {
-            if (mapOccupied[x][building.position.y + size] == 0)
+            if (mapOccupied[x][position.y + size] == 0)
             {
-                Entity e;
-                e.entityType = EntityType::BUILDER_UNIT;
-                e.position = Vec2Int{x, building.position.y + size};
-                int dist = distance(entity, e);
-                if (dist < min_dist)
+                Vec2Int testPos{x, position.y + size};
+                int dist = distance(testPos, requesterPos);
+                if (dist < dockingDist)
                 {
-                    min_dist = dist;
-                    min_pos = e.position;
+                    dockingDist = dist;
+                    dockingPos = testPos;
                 }
             }
         }
-    if (building.position.y > 0)
-        for (int x = building.position.x; x < building.position.x + size; x++)
+    if (position.y > 0)
+        for (int x = position.x; x < position.x + size; x++)
         {
-            if (mapOccupied[x][building.position.y - 1] == 0)
+            if (mapOccupied[x][position.y - 1] == 0)
             {
-                Entity e;
-                e.entityType = EntityType::BUILDER_UNIT;
-                e.position = Vec2Int{x, building.position.y - 1};
-                int dist = distance(entity, e);
-                if (dist < min_dist)
+                Vec2Int testPos{x, position.y - 1};
+                int dist = distance(testPos, requesterPos);
+                if (dist < dockingDist)
                 {
-                    min_dist = dist;
-                    min_pos = e.position;
+                    dockingDist = dist;
+                    dockingPos = testPos;
                 }
             }
         }
-    return min_pos;
+    return {dockingPos, dockingDist};
+}
+
+int Entity::getSize()
+{
+    int size = 1;
+    if (entityType == EntityType::BUILDER_BASE 
+        || entityType == EntityType::RANGED_BASE
+        || entityType == EntityType::MELEE_BASE)
+    {
+        size = 5;
+    }
+    else if (entityType == EntityType::BUILDER_UNIT
+             || entityType == EntityType::RANGED_UNIT
+             || entityType == EntityType::MELEE_UNIT
+             || entityType == EntityType::RESOURCE
+             || entityType == EntityType::WALL)
+    {
+        size = 1;
+    }
+    else if (entityType == EntityType::HOUSE)
+    {
+        size = 3;
+    }
+    else if (entityType == EntityType::TURRET)
+    {
+        size = 2;
+    }
+    return size;
 }
