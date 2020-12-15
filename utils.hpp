@@ -77,6 +77,6 @@ int countDamageSum(Vec2Int pos, int radius, std::vector<std::vector<int>>& map);
 
 bool isAvailable(std::vector<std::vector<int>>& map, Vec2Int pos, int size);
 bool isPassable(int var);
-bool exists(std::vector<std::vector<int>>& map, Vec2Int pos);
+bool exists(std::vector<std::vector<int>>& map, Vec2Int& pos);
 
 #endif

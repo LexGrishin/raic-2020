@@ -128,7 +128,7 @@ bool isPassable(int var)
 }
 
 
-bool exists(std::vector<std::vector<int>>& map, Vec2Int pos)
+bool exists(std::vector<std::vector<int>>& map, Vec2Int& pos)
 {
     int mapSize = map[0].size();
     bool result = true;
