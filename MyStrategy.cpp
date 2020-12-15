@@ -4,7 +4,8 @@
 #include <string>
 #include <typeinfo>
 #include <cmath>
-#include<algorithm>
+#include <algorithm>
+#include <queue>
 
 using std::cout;
 using std::endl;
@@ -30,7 +31,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         playerPopulation[player.id] = population;
     }
     
-    std::vector<std::vector<int>> mapOccupied(playerView.mapSize, std::vector<int>(playerView.mapSize, 0)); // Все сущности. 1 - клетка занята, 0 - клетка свободна.
+    std::vector<std::vector<int>> mapOccupied(playerView.mapSize, std::vector<int>(playerView.mapSize, -1)); // Карта для поиска пути.
     std::vector<std::vector<int>> mapBuilding(playerView.mapSize, std::vector<int>(playerView.mapSize, 0)); // Только постройки и ресурсы. 1 - клетка занята, 0 - клетка свободна. Заполняется с паддингом 1.
     std::vector<std::vector<int>> mapAttack(playerView.mapSize, std::vector<int>(playerView.mapSize, 0)); // Суммарный дамаг по клетке.
     std::vector<std::vector<int>> mapDamage(playerView.mapSize, std::vector<int>(playerView.mapSize, 0));
@@ -49,8 +50,6 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     // Fill maps and unit arrays.
     for (Entity entity : playerView.entities)
     {
-        fillMapCells(mapOccupied, entity.position, 1, entity.getSize(), 0);
-
         if ((entity.entityType == EntityType::HOUSE)
             ||(entity.entityType == EntityType::BUILDER_BASE) 
             ||(entity.entityType == EntityType::MELEE_BASE)
@@ -64,6 +63,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         if (entity.playerId == nullptr)
         {
             resourses.emplace_back(entity);
+            fillMapCells(mapOccupied, entity.position, entity.entityType, entity.getSize(), 0);
         }
         else if (*entity.playerId != playerView.myId)
         {
@@ -73,6 +73,7 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
                 playerPopulation[*entity.playerId].inUse += entity.populationUse();
             }
             enemyEntities.emplace_back(entity);
+            fillMapCells(mapOccupied, entity.position, entity.entityType, entity.getSize(), 0);
         }
         else
         {
@@ -99,27 +100,33 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
             case EntityType::TURRET:
                 if (entity.health < entity.maxHealth()) myDamagedBuildings.emplace_back(entity);
                 if (entity.active == true) myTurrets.emplace_back(entity);
+                fillMapCells(mapOccupied, entity.position, entity.entityType, entity.getSize(), 0);
                 break;
             case EntityType::BUILDER_BASE:
                 if (entity.health < entity.maxHealth()) myDamagedBuildings.emplace_back(entity);
                 if (entity.active == true) myBuildings.emplace_back(entity);
+                fillMapCells(mapOccupied, entity.position, entity.entityType, entity.getSize(), 0);
                 countBase += 1;
                 break;
             case EntityType::MELEE_BASE:
                 if (entity.health < entity.maxHealth()) myDamagedBuildings.emplace_back(entity);
                 if (entity.active == true) myBuildings.emplace_back(entity);
+                fillMapCells(mapOccupied, entity.position, entity.entityType, entity.getSize(), 0);
                 countMeleBase += 1;
                 break;
             case EntityType::RANGED_BASE:
                 if (entity.health < entity.maxHealth()) myDamagedBuildings.emplace_back(entity);
                 if (entity.active == true) myBuildings.emplace_back(entity);
+                fillMapCells(mapOccupied, entity.position, entity.entityType, entity.getSize(), 0);
                 countRangeBase += 1;
                 break;
             case EntityType::HOUSE:
                 if (entity.health < entity.maxHealth()) myDamagedBuildings.emplace_back(entity);
+                fillMapCells(mapOccupied, entity.position, entity.entityType, entity.getSize(), 0);
                 break;
             case EntityType::WALL:
                 if (entity.health < entity.maxHealth()) myDamagedBuildings.emplace_back(entity);
+                fillMapCells(mapOccupied, entity.position, entity.entityType, entity.getSize(), 0);
                 break;
             default:
                 break;
@@ -156,6 +163,52 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     lastAvailableResources = myAvailableResources;
     myAvailablePopulation = playerPopulation[playerView.myId].available - playerPopulation[playerView.myId].inUse;
 
+    // 1. Фаза намерений:
+    for (auto entity : myUnits)
+    {
+        if (entity.entityType == EntityType::BUILDER_UNIT)
+        {
+            getBuilderUnitIntention(entity, mapOccupied, mapDamage);
+            myUnitsPriority.push(entity);
+        }
+        else if (entity.entityType == EntityType::RANGED_UNIT)
+        {
+            getRangedUnitIntention(entity, mapOccupied, mapDamage);
+            myUnitsPriority.push(entity);
+        }
+        else
+        {
+            getMeleeUnitIntention(entity, mapOccupied, mapDamage);
+            myUnitsPriority.push(entity);
+        }
+    }
+
+    // 2. Фаза маневров:
+    while (! myUnitsPriority.empty())
+    {
+        Entity entity = myUnitsPriority.top();
+        EntityAction action;
+
+        if (entity.entityType == EntityType::BUILDER_UNIT)
+        {
+            getBuilderUnitMove(entity, mapOccupied);
+            action = getBuilderUnitAction(entity);
+        }
+        else if (entity.entityType == EntityType::RANGED_UNIT)
+        {
+            getRangedUnitMove(entity, mapOccupied);
+            action = getRangedUnitAction(entity);
+        }
+        else
+        {
+            getMeleeUnitMove(entity, mapOccupied);
+            action = getMeleeUnitAction(entity);
+        }
+        orders[entity.id] = action;
+    }
+
+
+// -----------------------------------------------------------------------------------------------------------------------------
     delDeadUnitsFromBuildOrder();
     delImposibleOrders(mapBuilding);
 
@@ -1150,3 +1203,56 @@ Entity MyStrategy::findNearestResourse(Entity& entity, std::vector<Entity>& enti
     return nearestEntity;
 }
 
+void MyStrategy::getBuilderUnitIntention(Entity& entity, 
+                                         std::vector<std::vector<int>>& mapOccupied,
+                                         std::vector<std::vector<int>>& mapDamage)
+{
+
+}
+
+void MyStrategy::getRangedUnitIntention(Entity& entity, 
+                                        std::vector<std::vector<int>>& mapOccupied,
+                                        std::vector<std::vector<int>>& mapDamage)
+{
+
+}
+
+void MyStrategy::getMeleeUnitIntention(Entity& entity, 
+                                       std::vector<std::vector<int>>& mapOccupied,
+                                       std::vector<std::vector<int>>& mapDamage)
+{
+
+}
+
+void MyStrategy::getBuilderUnitMove(Entity& entity, std::vector<std::vector<int>>& mapOccupied)
+{
+
+}
+
+void MyStrategy::getRangedUnitMove(Entity& entity, std::vector<std::vector<int>>& mapOccupied)
+{
+
+}
+
+void MyStrategy::getMeleeUnitMove(Entity& entity, std::vector<std::vector<int>>& mapOccupied)
+{
+
+}
+
+EntityAction MyStrategy::getBuilderUnitAction(Entity& entity)
+{
+    EntityAction action;
+    return action;
+}
+
+EntityAction MyStrategy::getRangedUnitAction(Entity& entity)
+{
+    EntityAction action;
+    return action;
+}
+
+EntityAction MyStrategy::getMeleeUnitAction(Entity& entity)
+{   
+    EntityAction action;
+    return action;
+}

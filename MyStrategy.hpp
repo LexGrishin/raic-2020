@@ -39,6 +39,8 @@ public:
                         myBuildings, 
                         myDamagedBuildings;
 
+    std::priority_queue<Entity> myUnitsPriority;
+
     std::vector<Entity> busyUnits;
     std::vector<Entity> buildOrder;
 
@@ -72,6 +74,25 @@ public:
 
     std::vector<Entity> filterFreeResources(std::vector<Entity>& resourses, std::vector<std::vector<int>>& mapResourse);
     Entity findNearestResourse(Entity& entity, std::vector<Entity>& entities);
+
+    // --------------------------------------------------------------------------
+    void getBuilderUnitIntention(Entity& entity, 
+                                 std::vector<std::vector<int>>& mapOccupied,
+                                 std::vector<std::vector<int>>& mapDamage);
+    void getRangedUnitIntention(Entity& entity, 
+                                std::vector<std::vector<int>>& mapOccupied,
+                                std::vector<std::vector<int>>& mapDamage);
+    void getMeleeUnitIntention(Entity& entity, 
+                               std::vector<std::vector<int>>& mapOccupied,
+                               std::vector<std::vector<int>>& mapDamage);
+    
+    void getBuilderUnitMove(Entity& entity, std::vector<std::vector<int>>& mapOccupied);
+    void getRangedUnitMove(Entity& entity, std::vector<std::vector<int>>& mapOccupied);
+    void getMeleeUnitMove(Entity& entity, std::vector<std::vector<int>>& mapOccupied);
+
+    EntityAction getBuilderUnitAction(Entity& entity);
+    EntityAction getRangedUnitAction(Entity& entity);
+    EntityAction getMeleeUnitAction(Entity& entity);
 };
 
 #endif

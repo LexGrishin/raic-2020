@@ -67,6 +67,16 @@ void Entity::writeTo(OutputStream& stream) const {
 
 // -------------------------------------------------------------------------------------------------------------------------------
 
+bool Entity::operator< (const Entity& entity)
+{
+    return (this->priority > entity.priority);
+}
+
+bool Entity::operator> (const Entity& entity)
+{
+    return (this->priority < entity.priority);
+}
+
 std::tuple<Vec2Int, int> Entity::getDockingPos(Vec2Int& requesterPos, std::vector<std::vector<int>>& mapOccupied)
 {  
     int size = getSize();
@@ -314,4 +324,67 @@ int Entity::damage()
             break;
     }
     return dmg;
+}
+
+WayPoint Entity::astar(Vec2Int target, std::vector<std::vector<int>>& mapOccupied)
+{
+    WayPoint start{position, 0, distance(position, target), nullptr};
+    WayPoint nearest{position, 0, distance(position, target), nullptr};
+
+    std::priority_queue<WayPoint> openPoints;
+    std::unordered_set<int> closedPoints;
+    openPoints.push(start);
+    while (! openPoints.empty())
+    {
+        WayPoint nextPoint = openPoints.top();
+        openPoints.pop();
+        if (nextPoint.position == target)
+        {
+            nextStep = getNextStep(nextPoint);
+            return nextPoint;
+        }
+        closedPoints.insert(nextPoint.id());
+
+        for (int dx = -1; dx < 2; dx++)
+            for (int dy = -1; dy < 2; dy++)
+            {
+                Vec2Int step{nextPoint.position.x + dx, nextPoint.position.y + dy};
+                if (abs(dx) + abs(dy) != 1 || (! exists(mapOccupied, step))) continue;
+                
+                if (isPassable(mapOccupied[step.x][step.y]))
+                {
+                    int walkTime = 1;
+                    if (mapOccupied[step.x][step.y] == EntityType::RESOURCE)
+                    {
+                        walkTime += healths::resourse / damage();
+                    }
+                    int g = nextPoint.g + walkTime;
+                    int h = distance(step, target);
+                    WayPoint stepPoint{step, g, h, std::make_shared<WayPoint>(nextPoint)};
+                    if (closedPoints.find(stepPoint.id()) == closedPoints.end())
+                    {
+                        openPoints.push(stepPoint);
+                    }
+                    if (stepPoint.h < nearest.h)
+                    {
+                        nearest = stepPoint;
+                    }
+                }
+            }
+    }
+    nextStep = getNextStep(nearest);
+    return nearest;
+}
+
+Vec2Int Entity::getNextStep(WayPoint& point)
+{
+    Vec2Int nextStep;
+    Vec2Int position = point.position;
+    std::shared_ptr<WayPoint> parent = point.parent;
+    while (parent)
+    {
+        position = (*parent).position;
+        parent = (*parent).parent;
+    }
+    return position;
 }

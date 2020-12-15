@@ -1,5 +1,25 @@
 #include "utils.hpp"
 
+WayPoint::WayPoint(Vec2Int position, int g, int h, std::shared_ptr<WayPoint> parent)
+{
+    this->g = g;
+    this->h = h;
+    this->f = g + h;
+    this->parent = parent;
+    this->position = position;
+}
+
+bool WayPoint::operator< (const WayPoint& wayPoint)
+{
+    return (f > wayPoint.f);
+}
+
+int WayPoint::id()
+{
+    int mapSize = 80;
+    return (position.x + position.y * mapSize);
+}
+
 int distance(Vec2Int& a, Vec2Int& b)
 {
     int dx = abs(a.x - b.x);
@@ -96,6 +116,27 @@ bool isAvailable(std::vector<std::vector<int>>& map, Vec2Int pos, int size)
                 return true;
     return false;
 }
+
+bool isPassable(int var)
+{
+    bool result = false;
+    if (var == -1 || var == EntityType::RESOURCE)
+    {
+        result = true;
+    }
+    return result;
+}
+
+
+bool exists(std::vector<std::vector<int>>& map, Vec2Int pos)
+{
+    int mapSize = map[0].size();
+    bool result = true;
+    if (pos.x < 0 || pos.y < 0 || pos.x >= mapSize || pos.y >= mapSize) result = false;
+    return result;
+
+}
+
 
 Vec2Int getRetreatPos(Vec2Int pos, std::vector<std::vector<int>>& mapDamage, std::vector<std::vector<int>>& mapOccupied)
 {

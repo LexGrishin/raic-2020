@@ -15,6 +15,13 @@ namespace colors
   const Color yellow{1, 1, 0, 1};
 }
 
+
+namespace healths
+{
+    const int resourse = 30;
+}
+
+
 namespace debug
 {
     const auto info_pos = std::make_shared<Vec2Float>(80, 80);
@@ -43,6 +50,21 @@ struct MoveAnalysis
     float total;
 };
 
+class WayPoint
+{
+public:
+    int g;
+    int h;
+    int f;
+    std::shared_ptr<WayPoint> parent;
+    Vec2Int position;
+
+    WayPoint(Vec2Int position, int g, int h, std::shared_ptr<WayPoint> parent);
+
+    bool operator< (const WayPoint& wayPoint);
+    int id();
+};
+
 int distance(Vec2Int& a, Vec2Int& b);
 
 float unitBalance(float x);
@@ -54,5 +76,7 @@ int countUnitsInRadius(Vec2Int pos, int radius, std::vector<std::vector<int>>& m
 int countDamageSum(Vec2Int pos, int radius, std::vector<std::vector<int>>& map);
 
 bool isAvailable(std::vector<std::vector<int>>& map, Vec2Int pos, int size);
+bool isPassable(int var);
+bool exists(std::vector<std::vector<int>>& map, Vec2Int pos);
 
 #endif

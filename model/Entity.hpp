@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <queue>
+#include <unordered_set>
 #include "../utils.hpp"
 
 class Entity {
@@ -27,6 +29,8 @@ public:
 
     // -------------------------------------------------------------------------------------------------------------
     int distToTarget;
+    int priority = 0;
+    Vec2Int nextStep;
     int getSize();
     int populationProvide();
     int populationUse();
@@ -34,7 +38,10 @@ public:
     int attackRange();
     int damage();
     std::tuple<Vec2Int, int> Entity::getDockingPos(Vec2Int& requesterPos, std::vector<std::vector<int>>& mapOccupied);
-
+    bool operator< (const Entity& entity);
+    bool operator> (const Entity& entity);
+    WayPoint astar(Vec2Int target, std::vector<std::vector<int>>& mapOccupied);
+    Vec2Int getNextStep(WayPoint& point);
 };
 
 #endif
