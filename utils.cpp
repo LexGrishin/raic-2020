@@ -1,6 +1,6 @@
 #include "utils.hpp"
 
-WayPoint::WayPoint(Vec2Int position, int g, int h, std::shared_ptr<WayPoint> parent)
+WayPoint::WayPoint(Vec2Int position, float g, float h, std::shared_ptr<WayPoint> parent)
 {
     this->g = g;
     this->h = h;
@@ -137,6 +137,15 @@ bool exists(std::vector<std::vector<int>>& map, Vec2Int& pos)
 
 }
 
+float cross(Vec2Int& start, Vec2Int& current, Vec2Int& target)
+{
+    float dx1 = current.x - target.x;
+    float dy1 = current.y - target.y;
+    float dx2 = start.x - target.x;
+    float dy2 = start.y - target.y;
+    float result = abs(dx1*dy2 - dx2*dy1) * 0.0001;
+    return result;
+}
 
 Vec2Int getRetreatPos(Vec2Int pos, std::vector<std::vector<int>>& mapDamage, std::vector<std::vector<int>>& mapOccupied)
 {

@@ -53,13 +53,13 @@ struct MoveAnalysis
 class WayPoint
 {
 public:
-    int g;
-    int h;
-    int f;
+    float g;
+    float h;
+    float f;
     std::shared_ptr<WayPoint> parent;
     Vec2Int position;
 
-    WayPoint(Vec2Int position, int g, int h, std::shared_ptr<WayPoint> parent);
+    WayPoint(Vec2Int position, float g, float h, std::shared_ptr<WayPoint> parent);
 
     bool operator< (const WayPoint& wayPoint);
     int id();
@@ -78,5 +78,6 @@ int countDamageSum(Vec2Int pos, int radius, std::vector<std::vector<int>>& map);
 bool isAvailable(std::vector<std::vector<int>>& map, Vec2Int pos, int size);
 bool isPassable(int var);
 bool exists(std::vector<std::vector<int>>& map, Vec2Int& pos);
+float cross(Vec2Int& start, Vec2Int& current, Vec2Int& target);
 
 #endif

@@ -353,21 +353,21 @@ WayPoint Entity::astar(Vec2Int target, std::vector<std::vector<int>>& mapOccupie
                 
                 if (isPassable(mapOccupied[step.x][step.y]))
                 {
-                    int walkTime = 1;
+                    float walkTime = 1;
                     if (mapOccupied[step.x][step.y] == EntityType::RESOURCE)
                     {
-                        walkTime += healths::resourse / damage();
+                        walkTime += healths::resourse / float(damage());
                     }
-                    int g = nextPoint.g + walkTime;
-                    int h = distance(step, target);
+                    float g = nextPoint.g + walkTime;
+                    float h = distance(step, target) + cross(position, step, target);
                     WayPoint stepPoint{step, g, h, std::make_shared<WayPoint>(nextPoint)};
                     if (closedPoints.find(stepPoint.id()) == closedPoints.end())
                     {
                         openPoints.push(stepPoint);
-                    }
-                    if (stepPoint.h < nearest.h)
-                    {
-                        nearest = stepPoint;
+                        if (stepPoint.h < nearest.h)
+                        {
+                            nearest = stepPoint;
+                        }
                     }
                 }
             }
