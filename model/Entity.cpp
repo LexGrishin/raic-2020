@@ -48,7 +48,6 @@ Entity Entity::readFrom(InputStream& stream) {
     result.position = Vec2Int::readFrom(stream);
     result.health = stream.readInt();
     result.active = stream.readBool();
-    result.distToTarget = 100000;
     return result;
 }
 void Entity::writeTo(OutputStream& stream) const {
@@ -77,7 +76,7 @@ bool Entity::operator> (const Entity& entity)
     return (this->priority < entity.priority);
 }
 
-std::tuple<Vec2Int, int> Entity::getDockingPos(Vec2Int& requesterPos, std::vector<std::vector<int>>& mapOccupied)
+Vec2Int Entity::getDockingPos(Vec2Int& requesterPos, std::vector<std::vector<int>>& mapOccupied)
 {  
     int size = getSize();
     int mapSize = mapOccupied[0].size();
@@ -141,7 +140,7 @@ std::tuple<Vec2Int, int> Entity::getDockingPos(Vec2Int& requesterPos, std::vecto
                 }
             }
         }
-    return {dockingPos, dockingDist};
+    return dockingPos;
 }
 
 int Entity::getSize()
@@ -330,7 +329,7 @@ WayPoint Entity::astar(Vec2Int target, std::vector<std::vector<int>>& mapOccupie
 {
     WayPoint start{position, 0, distance(position, target), nullptr};
     WayPoint nearest{position, 0, distance(position, target), nullptr};
-
+    this->target = target;
     std::priority_queue<WayPoint> openPoints;
     std::unordered_set<int> closedPoints;
     openPoints.push(start);

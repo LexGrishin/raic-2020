@@ -21,6 +21,15 @@ namespace healths
     const int resourse = 30;
 }
 
+namespace prices
+{
+    const int builderBase = 500;
+    const int meleeBase = 500;
+    const int rangeBase = 500;
+    const int house = 50;
+    const int meleeBase = 500;
+}
+
 
 namespace debug
 {

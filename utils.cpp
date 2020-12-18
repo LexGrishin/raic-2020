@@ -162,16 +162,16 @@ Vec2Int getRetreatPos(Vec2Int pos, std::vector<std::vector<int>>& mapDamage, std
     Vec2Int posLeft{pos.x - 1, pos.y};
     stayDamage = countDamageSum(pos, radius, mapDamage);
     if (posTop.y < mapSize)
-        if (mapOccupied[posTop.x][posTop.y] == 0)
+        if (mapOccupied[posTop.x][posTop.y] == -1)
             topDamage = countDamageSum(posTop, radius, mapDamage);
     if (posBot.y >= 0)
-        if (mapOccupied[posBot.x][posBot.y] == 0)
+        if (mapOccupied[posBot.x][posBot.y] == -1)
             botDamage = countDamageSum(posBot, radius, mapDamage);
     if (posRight.x < mapSize)
-        if (mapOccupied[posRight.x][posRight.y] == 0)
+        if (mapOccupied[posRight.x][posRight.y] == -1)
             rightDamage = countDamageSum(posRight, radius, mapDamage);
     if (posLeft.x >= 0)
-        if (mapOccupied[posLeft.x][posLeft.y] == 0)
+        if (mapOccupied[posLeft.x][posLeft.y] == -1)
             leftDamage = countDamageSum(posLeft, radius, mapDamage);
     int minDamage = stayDamage;
     Vec2Int minPos = pos;
@@ -195,8 +195,6 @@ Vec2Int getRetreatPos(Vec2Int pos, std::vector<std::vector<int>>& mapDamage, std
         minDamage = leftDamage;
         minPos = posLeft;
     }
-    mapOccupied[pos.x][pos.y] = 0;
-    mapOccupied[minPos.x][minPos.y] = 1;
     return minPos;
 }
 

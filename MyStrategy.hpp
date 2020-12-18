@@ -41,8 +41,7 @@ public:
 
     std::priority_queue<Entity> myUnitsPriority;
 
-    std::vector<Entity> busyUnits;
-    std::vector<Entity> buildOrder;
+    std::unordered_map<int, Entity> buildOrder;
 
     std::vector <std::shared_ptr<DebugData>> debugData;
 
@@ -50,7 +49,7 @@ public:
     EntityAction chooseBuilderUnitAction(Entity& entity, 
                                          std::vector<std::vector<int>>& mapOccupied,
                                          std::vector<std::vector<int>>& mapDamage);
-    void fillBuildOrder(std::vector<std::vector<int>>& mapBuilding, std::unordered_map<int, EntityAction>& orders);
+    
     EntityAction chooseRecruitUnitAction(Entity& entity, const PlayerView& playerView, int enemyDistToBase, std::vector<std::vector<int>>& mapOccupied);
     EntityAction chooseRangeUnitAction(Entity& entity,
                                         std::vector<std::vector<int>>& mapOccupied, 
@@ -63,9 +62,9 @@ public:
                                         std::vector<std::vector<int>>& mapEnemy,
                                         std::vector<std::vector<int>>& mapDamage);
     ConstructAction constructHouse(Vec2Int buildingPosition, std::vector<std::vector<int>>& map);
-    Entity findNearestEntity(Entity& entity, std::vector<Entity>& entities);
-    Entity findNearestFreeBuilder(Entity& entity, std::unordered_map<int, EntityAction>& orders);
-    std::vector<Entity> findFreePosOnBuildCellMap(std::vector<std::vector<int>>& map, EntityType type);
+    
+    
+    
     Vec2Int getBestPosNearEntity(Entity& entity, Entity& building, std::vector<std::vector<int>>& mapOccupied);
     void delDeadUnitsFromBuildOrder();
     void delImposibleOrders(std::vector<std::vector<int>>& mapBuilding);
@@ -73,9 +72,10 @@ public:
     Vec2Int getNextStep(Entity entity, Entity target, std::vector<std::vector<int>>& mapOccupied);
 
     std::vector<Entity> filterFreeResources(std::vector<Entity>& resourses, std::vector<std::vector<int>>& mapResourse);
-    Entity findNearestResourse(Entity& entity, std::vector<Entity>& entities);
 
     // --------------------------------------------------------------------------
+    std::vector<Entity> findFreePosOnBuildCellMap(std::vector<std::vector<int>>& map, Entity building);
+
     void getBuilderUnitIntention(Entity& entity, 
                                  std::vector<std::vector<int>>& mapOccupied,
                                  std::vector<std::vector<int>>& mapDamage);
@@ -86,13 +86,17 @@ public:
                                std::vector<std::vector<int>>& mapOccupied,
                                std::vector<std::vector<int>>& mapDamage);
     
-    void getBuilderUnitMove(Entity& entity, std::vector<std::vector<int>>& mapOccupied);
-    void getRangedUnitMove(Entity& entity, std::vector<std::vector<int>>& mapOccupied);
-    void getMeleeUnitMove(Entity& entity, std::vector<std::vector<int>>& mapOccupied);
+    void getBuilderUnitMove(Entity& entity, std::vector<std::vector<int>>& mapOccupied, std::vector<std::vector<int>>& mapDamage, std::vector<std::vector<Vec2Int>>& mapCameFrom);
+    void getRangedUnitMove(Entity& entity, std::vector<std::vector<int>>& mapOccupied, std::vector<std::vector<int>>& mapDamage, std::vector<std::vector<Vec2Int>>& mapCameFrom);
+    void getMeleeUnitMove(Entity& entity, std::vector<std::vector<int>>& mapOccupied, std::vector<std::vector<int>>& mapDamage, std::vector<std::vector<Vec2Int>>& mapCameFrom);
 
     EntityAction getBuilderUnitAction(Entity& entity);
     EntityAction getRangedUnitAction(Entity& entity);
     EntityAction getMeleeUnitAction(Entity& entity);
+
+    Entity findNearestEntity(Entity& entity, std::vector<Entity>& entities, std::vector<std::vector<int>>& mapOccupied, bool direct);
+    void fillBuildOrder(std::vector<std::vector<int>>& mapBuilding, std::vector<std::vector<int>>& mapOccupied, std::unordered_map<int, EntityAction>& orders);
+    Entity findNearestFreeBuilder(Entity& entity, std::unordered_map<int, EntityAction>& orders);
 };
 
 #endif
