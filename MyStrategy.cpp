@@ -164,9 +164,14 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
     lastAvailableResources = myAvailableResources;
     myAvailablePopulation = playerPopulation[playerView.myId].available - playerPopulation[playerView.myId].inUse;
 
+    for (auto pair : buildOrder)
+    {
+        cout<<"builder uid: "<<pair.first<<endl;
+    }
     delDeadUnitsFromBuildOrder();
     delImposibleOrders(mapBuilding);
-
+    cout<<"BO: "<<buildOrder.size()<<endl;
+    
     // 1. Фаза намерений:
     for (auto entity : myUnits)
     {
@@ -388,7 +393,7 @@ EntityAction MyStrategy::chooseRecruitUnitAction(Entity& entity, const PlayerVie
     
     if (entity.entityType == EntityType::BUILDER_BASE)
     {
-        if (((currentBalance < tickBalance) || (d_Resources < 0) || playerView.currentTick < 100) && (countBuilderUnits < 75))
+        if (((currentBalance < tickBalance) || (d_Resources < 0) || playerView.currentTick < 1000) && (countBuilderUnits < 750))
         {
             Entity nearestResourse = findNearestEntity(entity, resourses, mapOccupied, true);
             if (nearestResourse.id == -1)
@@ -693,8 +698,8 @@ Entity MyStrategy::findNearestEntity(Entity& entity, std::vector<Entity>& entiti
     {
         for (auto ent : entities)
         {
-            auto dockingPos = entity.getDockingPos(entity.position, mapOccupied);
-            if (dockingPos.x != -1)
+            auto dockingPos = ent.getDockingPos(entity.position, mapOccupied);
+            if (dockingPos != Vec2Int{-1, -1})
             {
                 auto dockingDist = distance(dockingPos, entity.position);
                 if (dockingDist < min_dist)
@@ -736,6 +741,7 @@ void MyStrategy::getBuilderUnitIntention(Entity& entity,
     int distToBuild = 100000;
     if (buildOrder.find(entity.id) != buildOrder.end()) 
     {
+        cout<<"Busy unit found: "<<entity.id<<endl;
         isBusy = true;
         buildEntity = buildOrder[entity.id];
         nearestBuildDockingPos = buildEntity.getDockingPos(entity.position, mapOccupied);
@@ -755,7 +761,9 @@ void MyStrategy::getBuilderUnitIntention(Entity& entity,
     }
     else if (isBusy)
     {
+        cout<<"Busy unit: "<<entity.id<<" Build pos:"<<nearestBuildDockingPos.x<<", "<<nearestBuildDockingPos.y<<endl;
         WayPoint point = entity.astar(nearestBuildDockingPos, mapOccupied);
+        cout<<"Busy unit: "<<entity.id<<" target Build pos:"<<entity.target.x<<", "<<entity.target.y<<endl;
         entity.priority = distToBuild;
         entity.buildTarget = std::make_shared<Entity>(buildOrder[entity.id]);
     }
@@ -789,6 +797,16 @@ void MyStrategy::getBuilderUnitIntention(Entity& entity,
             entity.priority = distance(entity.position, enemyCenter3.position);
         }  
     }
+
+    ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x + 0.5, entity.position.y + 0.5), {0, 0}, colors::red};
+    ColoredVertex B{std::make_shared<Vec2Float>(entity.nextStep.x + 0.5, entity.nextStep.y + 0.5), {0, 0}, colors::red};
+    std::vector<ColoredVertex> line{A, B};
+    this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+
+    ColoredVertex C{std::make_shared<Vec2Float>(entity.position.x + 0.5, entity.position.y + 0.5), {0, 0}, colors::green};
+    ColoredVertex D{std::make_shared<Vec2Float>(entity.target.x + 0.5, entity.target.y + 0.5), {0, 0}, colors::green};
+    std::vector<ColoredVertex> line2{C, D};
+    this->debugData.emplace_back(new DebugData::Primitives(line2, PrimitiveType::LINES));
 }
 
 void MyStrategy::getRangedUnitIntention(Entity& entity, 
@@ -812,10 +830,16 @@ void MyStrategy::getBuilderUnitMove(Entity& entity,
 {
     bool isCameFromCollision = false;
     Vec2Int cameFrom;
+    int tmp;
+    if (mapOccupied[entity.target.x][entity.target.y] != -1)
+    {
+        getBuilderUnitIntention(entity, mapOccupied, mapDamage);
+    }
     if (mapOccupied[entity.position.x][entity.position.y] != -1)
     {
         isCameFromCollision = true;
         cameFrom = mapCameFrom[entity.position.x][entity.position.y];
+        tmp = mapOccupied[cameFrom.x][cameFrom.y];
         mapOccupied[cameFrom.x][cameFrom.y] = EntityType::MELEE_UNIT;
     }
     if (mapOccupied[entity.nextStep.x][entity.nextStep.y] != -1)
@@ -832,9 +856,8 @@ void MyStrategy::getBuilderUnitMove(Entity& entity,
     }
     if (isCameFromCollision)
     {
-        mapOccupied[cameFrom.x][cameFrom.y] = -1;
+        mapOccupied[cameFrom.x][cameFrom.y] = tmp;
     }
-
     mapOccupied[entity.nextStep.x][entity.nextStep.y] = entity.entityType;
     mapCameFrom[entity.nextStep.x][entity.nextStep.y] = entity.position;
 }
@@ -860,8 +883,8 @@ EntityAction MyStrategy::getBuilderUnitAction(Entity& entity)
         move.findClosestPosition = false;
         action.moveAction = std::make_shared<MoveAction>(move);
 
-        ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x, entity.position.y), {0, 0}, colors::white};
-        ColoredVertex B{std::make_shared<Vec2Float>(entity.target.x, entity.target.y), {0, 0}, colors::white};
+        ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x + 0.5, entity.position.y + 0.5), {0, 0}, colors::white};
+        ColoredVertex B{std::make_shared<Vec2Float>(entity.nextStep.x + 0.5, entity.nextStep.y + 0.5), {0, 0}, colors::white};
         std::vector<ColoredVertex> line{A, B};
         this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
     }
@@ -981,12 +1004,12 @@ void MyStrategy::fillBuildOrder(std::vector<std::vector<int>>& mapBuilding, std:
                 }
             }
         }
-        else if (myAvailablePopulation < 7 && myAvailableResources >= prices::meleeBase)
+        else if (myAvailablePopulation < 7 && myAvailableResources >= prices::house)
         {
-            Entity meleeBase;
-            meleeBase.id = -1;
-            meleeBase.entityType = EntityType::MELEE_BASE;
-            std::vector<Entity> possibleBuildPositions = findFreePosOnBuildCellMap(mapBuilding, meleeBase);
+            Entity house;
+            house.id = -1;
+            house.entityType = EntityType::HOUSE;
+            std::vector<Entity> possibleBuildPositions = findFreePosOnBuildCellMap(mapBuilding, house);
             Entity builder = findNearestFreeBuilder(baseCenter, orders);
             if (builder.id != -1 && possibleBuildPositions.size() > 0)
             {
@@ -1038,6 +1061,7 @@ void MyStrategy::delImposibleOrders(std::vector<std::vector<int>>& mapBuilding)
                 if (mapBuilding[j][k] != 0)
                 {
                     isImposible = true;
+                    cout<<"Impossible build!"<<endl;
                     break;
                 }
             }
@@ -1049,6 +1073,7 @@ void MyStrategy::delImposibleOrders(std::vector<std::vector<int>>& mapBuilding)
             newBuildOrder[pair.first] = pair.second;
         }
     }
+    cout<<"new BO size (impos): "<<newBuildOrder.size()<<endl;
     buildOrder = newBuildOrder;
 }
 
@@ -1060,9 +1085,10 @@ void MyStrategy::delDeadUnitsFromBuildOrder()
     {
         bool isDead = true;
         for (Entity entity : myUnits)
-            if(entity.id == pair.second.id)
+            if(entity.id == pair.first)
             {
                 isDead = false;
+                cout<<"Dead builder!"<<endl;
                 break;
             }
         if (!isDead)
@@ -1070,5 +1096,6 @@ void MyStrategy::delDeadUnitsFromBuildOrder()
             newBuildOrder[pair.first] = pair.second;
         }
     }
+    cout<<"new BO size (dead): "<<newBuildOrder.size()<<endl;
     buildOrder = newBuildOrder;
 }

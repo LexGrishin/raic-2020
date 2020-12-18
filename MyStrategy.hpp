@@ -61,8 +61,6 @@ public:
                                         std::vector<std::vector<int>>& mapAlly, 
                                         std::vector<std::vector<int>>& mapEnemy,
                                         std::vector<std::vector<int>>& mapDamage);
-    ConstructAction constructHouse(Vec2Int buildingPosition, std::vector<std::vector<int>>& map);
-    
     
     
     Vec2Int getBestPosNearEntity(Entity& entity, Entity& building, std::vector<std::vector<int>>& mapOccupied);

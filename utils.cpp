@@ -9,9 +9,9 @@ WayPoint::WayPoint(Vec2Int position, float g, float h, std::shared_ptr<WayPoint>
     this->position = position;
 }
 
-bool WayPoint::operator< (const WayPoint& wayPoint)
+bool operator< (const WayPoint& p1, const WayPoint& p2)
 {
-    return (f > wayPoint.f);
+    return (p1.f > p2.f);
 }
 
 int WayPoint::id()

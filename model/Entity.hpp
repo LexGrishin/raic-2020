@@ -40,10 +40,10 @@ public:
     int attackRange();
     int damage();
     Vec2Int getDockingPos(Vec2Int& requesterPos, std::vector<std::vector<int>>& mapOccupied);
-    bool operator< (const Entity& entity);
-    bool operator> (const Entity& entity);
     WayPoint astar(Vec2Int target, std::vector<std::vector<int>>& mapOccupied);
     Vec2Int getNextStep(WayPoint& point);
 };
+
+bool operator< (const Entity& e1, const Entity& e2);
 
 #endif

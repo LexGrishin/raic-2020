@@ -66,14 +66,9 @@ void Entity::writeTo(OutputStream& stream) const {
 
 // -------------------------------------------------------------------------------------------------------------------------------
 
-bool Entity::operator< (const Entity& entity)
+bool operator< (const Entity& e1, const Entity& e2)
 {
-    return (this->priority > entity.priority);
-}
-
-bool Entity::operator> (const Entity& entity)
-{
-    return (this->priority < entity.priority);
+    return (e1.priority > e2.priority);
 }
 
 Vec2Int Entity::getDockingPos(Vec2Int& requesterPos, std::vector<std::vector<int>>& mapOccupied)
@@ -87,7 +82,7 @@ Vec2Int Entity::getDockingPos(Vec2Int& requesterPos, std::vector<std::vector<int
     if (position.x > 0)
         for (int y = position.y; y < position.y + size; y++)
         {
-            if (mapOccupied[position.x - 1][y] == 0)
+            if (mapOccupied[position.x - 1][y] == -1)
             {
                 Vec2Int testPos{position.x - 1, y};
                 int dist = distance(testPos, requesterPos);
@@ -101,7 +96,7 @@ Vec2Int Entity::getDockingPos(Vec2Int& requesterPos, std::vector<std::vector<int
     if (position.x + size < mapSize)
         for (int y = position.y; y < position.y + size; y++)
         {
-            if (mapOccupied[position.x + size][y] == 0)
+            if (mapOccupied[position.x + size][y] == -1)
             {
                 Vec2Int testPos{position.x + size, y};
                 int dist = distance(testPos, requesterPos);
@@ -115,7 +110,7 @@ Vec2Int Entity::getDockingPos(Vec2Int& requesterPos, std::vector<std::vector<int
     if (position.y + size < mapSize)
         for (int x = position.x; x < position.x + size; x++)
         {
-            if (mapOccupied[x][position.y + size] == 0)
+            if (mapOccupied[x][position.y + size] == -1)
             {
                 Vec2Int testPos{x, position.y + size};
                 int dist = distance(testPos, requesterPos);
@@ -129,7 +124,7 @@ Vec2Int Entity::getDockingPos(Vec2Int& requesterPos, std::vector<std::vector<int
     if (position.y > 0)
         for (int x = position.x; x < position.x + size; x++)
         {
-            if (mapOccupied[x][position.y - 1] == 0)
+            if (mapOccupied[x][position.y - 1] == -1)
             {
                 Vec2Int testPos{x, position.y - 1};
                 int dist = distance(testPos, requesterPos);
@@ -327,23 +322,28 @@ int Entity::damage()
 
 WayPoint Entity::astar(Vec2Int target, std::vector<std::vector<int>>& mapOccupied)
 {
-    WayPoint start{position, 0, distance(position, target), nullptr};
-    WayPoint nearest{position, 0, distance(position, target), nullptr};
+    WayPoint start{position, 0, float(distance(position, target)), nullptr};
+    WayPoint nearest{position, 0, float(distance(position, target)), nullptr};
     this->target = target;
     std::priority_queue<WayPoint> openPoints;
     std::unordered_set<int> closedPoints;
     openPoints.push(start);
     while (! openPoints.empty())
     {
+        // std::cout<<"openPoints queue len: "<<openPoints.size()<<std::endl;
         WayPoint nextPoint = openPoints.top();
+        // std::cout<<"next point: "<<nextPoint.position.x<<", "<<nextPoint.position.y<<std::endl;
         openPoints.pop();
         if (nextPoint.position == target)
         {
             nextStep = getNextStep(nextPoint);
             return nextPoint;
         }
+        if (closedPoints.find(nextPoint.id()) != closedPoints.end()) continue;
         closedPoints.insert(nextPoint.id());
-
+        // std::cout<<"closedPoints len: "<<closedPoints.size()<<std::endl;
+        // char a;
+        // // std::cin>>a;
         for (int dx = -1; dx < 2; dx++)
             for (int dy = -1; dy < 2; dy++)
             {
@@ -363,6 +363,7 @@ WayPoint Entity::astar(Vec2Int target, std::vector<std::vector<int>>& mapOccupie
                     if (closedPoints.find(stepPoint.id()) == closedPoints.end())
                     {
                         openPoints.push(stepPoint);
+                        // std::cout<<"push to queue: "<<stepPoint.position.x<<", "<<stepPoint.position.y<<std::endl;
                         if (stepPoint.h < nearest.h)
                         {
                             nearest = stepPoint;
@@ -371,19 +372,24 @@ WayPoint Entity::astar(Vec2Int target, std::vector<std::vector<int>>& mapOccupie
                 }
             }
     }
+    std::cout<<"(can't find path) A-star closedPoints len: "<<closedPoints.size()<<std::endl;
     nextStep = getNextStep(nearest);
     return nearest;
 }
 
 Vec2Int Entity::getNextStep(WayPoint& point)
 {
-    Vec2Int nextStep;
     Vec2Int position = point.position;
     std::shared_ptr<WayPoint> parent = point.parent;
+    std::shared_ptr<WayPoint> grantparent;
     while (parent)
     {
-        position = (*parent).position;
-        parent = (*parent).parent;
+        grantparent = (*parent).parent;
+        if (grantparent) 
+        {
+            position = (*parent).position;
+        }
+        parent = grantparent;
     }
     return position;
 }

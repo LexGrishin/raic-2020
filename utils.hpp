@@ -4,8 +4,13 @@
 #include <iostream>
 #include <string>
 #include <math.h>
+#include <memory>
+#include <vector>
 
-#include "model/Model.hpp"
+#include "model/Vec2Int.hpp"
+#include "model/Vec2Float.hpp"
+#include "model/Color.hpp"
+#include "model/EntityType.hpp"
 
 namespace colors 
 {
@@ -27,7 +32,6 @@ namespace prices
     const int meleeBase = 500;
     const int rangeBase = 500;
     const int house = 50;
-    const int meleeBase = 500;
 }
 
 
@@ -42,12 +46,6 @@ struct PlayerPopulation
 {
     int inUse;
     int available;
-};
-
-struct ConstructAction
-{
-    int entityId;
-    EntityAction entityAction;
 };
 
 struct MoveAnalysis
@@ -69,10 +67,10 @@ public:
     Vec2Int position;
 
     WayPoint(Vec2Int position, float g, float h, std::shared_ptr<WayPoint> parent);
-
-    bool operator< (const WayPoint& wayPoint);
     int id();
 };
+
+bool operator< (const WayPoint& p1, const WayPoint& p2);
 
 int distance(Vec2Int& a, Vec2Int& b);
 
