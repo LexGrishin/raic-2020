@@ -15,10 +15,10 @@ MyStrategy::MyStrategy() {}
 
 Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugInterface)
 {
+    debugInterface->send(DebugCommand::SetAutoFlush(false));
     this->debugData.clear();
-
     std::unordered_map<int, EntityAction> orders{};
-    
+
     if (isGlobalsSet == false)
         setGlobals(playerView);
 
@@ -263,10 +263,10 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         {
             if (mapBuilding[i][j] != 0)
             {
-                this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(std::make_shared<Vec2Float>(i, j), 
+                this->debugData.emplace_back(new DebugData::PlacedText(ColoredVertex(std::make_shared<Vec2Float>(i+0.5, j+0.5), 
                                                                          Vec2Float(0, 0), colors::red), 
-                                                                         to_string(mapBuilding[i][j]), 
-                                                                         0, 10));
+                                                                         "X", 
+                                                                         0.5, 10));
             }
         }
 
@@ -290,18 +290,25 @@ Action MyStrategy::getAction(const PlayerView playerView, DebugInterface* debugI
         <<" My D: "<<myDamagedBuildings.size()
         <<" BO: "<<buildOrder.size()
         <<endl;
-
+    
+    for (auto item : this->debugData)
+    {
+        debugInterface->send(DebugCommand::Add(item));
+    }
+    debugInterface->send(DebugCommand::Flush());
     return Action(orders);
 }
 
 void MyStrategy::debugUpdate(const PlayerView& playerView, DebugInterface& debugInterface)
 {
-    debugInterface.send(DebugCommand::Clear());
-    for (auto item : this->debugData)
-    {
-        debugInterface.send(DebugCommand::Add(item));
-    }
-    debugInterface.getState();
+    debugInterface.send(DebugCommand::SetAutoFlush(false));
+    // debugInterface.send(DebugCommand::Clear());
+    // for (auto item : this->debugData)
+    // {
+    //     debugInterface.send(DebugCommand::Add(item));
+    // }
+    // debugInterface.send(DebugCommand::Flush());
+    // debugInterface.getState();
 }
 
 void MyStrategy::setGlobals(const PlayerView& playerView)
@@ -798,10 +805,10 @@ void MyStrategy::getBuilderUnitIntention(Entity& entity,
         }  
     }
 
-    ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x + 0.5, entity.position.y + 0.5), {0, 0}, colors::red};
-    ColoredVertex B{std::make_shared<Vec2Float>(entity.nextStep.x + 0.5, entity.nextStep.y + 0.5), {0, 0}, colors::red};
-    std::vector<ColoredVertex> line{A, B};
-    this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+    // ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x + 0.5, entity.position.y + 0.5), {0, 0}, colors::red};
+    // ColoredVertex B{std::make_shared<Vec2Float>(entity.nextStep.x + 0.5, entity.nextStep.y + 0.5), {0, 0}, colors::red};
+    // std::vector<ColoredVertex> line{A, B};
+    // this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
 
     ColoredVertex C{std::make_shared<Vec2Float>(entity.position.x + 0.5, entity.position.y + 0.5), {0, 0}, colors::green};
     ColoredVertex D{std::make_shared<Vec2Float>(entity.target.x + 0.5, entity.target.y + 0.5), {0, 0}, colors::green};
@@ -883,10 +890,10 @@ EntityAction MyStrategy::getBuilderUnitAction(Entity& entity)
         move.findClosestPosition = false;
         action.moveAction = std::make_shared<MoveAction>(move);
 
-        ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x + 0.5, entity.position.y + 0.5), {0, 0}, colors::white};
-        ColoredVertex B{std::make_shared<Vec2Float>(entity.nextStep.x + 0.5, entity.nextStep.y + 0.5), {0, 0}, colors::white};
-        std::vector<ColoredVertex> line{A, B};
-        this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
+        // ColoredVertex A{std::make_shared<Vec2Float>(entity.position.x + 0.5, entity.position.y + 0.5), {0, 0}, colors::white};
+        // ColoredVertex B{std::make_shared<Vec2Float>(entity.nextStep.x + 0.5, entity.nextStep.y + 0.5), {0, 0}, colors::white};
+        // std::vector<ColoredVertex> line{A, B};
+        // this->debugData.emplace_back(new DebugData::Primitives(line, PrimitiveType::LINES));
     }
     else
     {
